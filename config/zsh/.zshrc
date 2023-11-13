@@ -9,6 +9,7 @@ path=(
     '/usr/local/sbin'(N-/)
     '/usr/sbin'(N-/)
     '/sbin'(N-/)
+    '/opt/homebrew/bin'(N-/)
 )
 
 path=(
@@ -71,6 +72,15 @@ chpwd() {
     else
         ls -a
     fi
+}
+
+function ghq-fzf() {
+    local src=$(ghq list | fzf --preview "ls -laTp $(ghq root)/{} | tail -n+4 | awk '{print \$9\"/\"\$6\"/\"\$7 \" \" \$10}'")
+    if [ -n "$src" ]; then
+        BUFFER="cd $(ghq root)/$src"
+        zle accept-line
+    fi
+    zle -R -c
 }
 
 ### key bindings ###
@@ -139,8 +149,8 @@ zle -N widget::history
 zle -N widget::ghq::dir
 zle -N widget::ghq::session
 zle -N forward-kill-word
+zle -N ghq-fzf
 
-bindkey -v
 bindkey "^R"        widget::history                 # C-r
 bindkey "^G"        widget::ghq::session            # C-g
 bindkey "^[g"       widget::ghq::dir                # Alt-g
@@ -149,29 +159,13 @@ bindkey "^E"        end-of-line                     # C-e
 bindkey "^K"        kill-line                       # C-k
 bindkey "^Q"        push-line-or-edit               # C-q
 bindkey "^W"        vi-backward-kill-word           # C-w
+bindkey "^]"        ghq-fzf                         # C-]
 bindkey "^?"        backward-delete-char            # backspace
 bindkey "^[[3~"     delete-char                     # delete
 bindkey "^[[1;3D"   backward-word                   # Alt + arrow-left
 bindkey "^[[1;3C"   forward-word                    # Alt + arrow-right
 bindkey "^[^?"      vi-backward-kill-word           # Alt + backspace
 bindkey "^[[1;33~"  kill-word                       # Alt + delete
-bindkey -M vicmd "^A" beginning-of-line             # vi: C-a
-bindkey -M vicmd "^E" end-of-line                   # vi: C-e
-
-# Change the cursor between 'Line' and 'Block' shape
-function zle-keymap-select zle-line-init zle-line-finish {
-    case "${KEYMAP}" in
-        main|viins)
-            printf '\033[6 q' # line cursor
-            ;;
-        vicmd)
-            printf '\033[2 q' # block cursor
-            ;;
-    esac
-}
-zle -N zle-line-init
-zle -N zle-line-finish
-zle -N zle-keymap-select
 
 # sheldon
 sheldon::load() {
