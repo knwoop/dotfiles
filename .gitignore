@@ -6,3 +6,4 @@ local.*
 ### Zsh cache ###
 *.zwc
 .zcomp*
+config/emacs
