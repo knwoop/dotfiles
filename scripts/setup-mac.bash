@@ -25,11 +25,12 @@ defaults write com.apple.finder NewWindowTarget -string PfHm
 defaults write NSGlobalDomain AppleKeyboardUIMode -int 3
 
 # Dock
-defaults write com.apple.dock orientation right
-defaults write com.apple.dock autohide -bool false
-defaults write com.apple.dock tilesize -int 50
+defaults write com.apple.dock orientation bottom
+defaults write com.apple.dock autohide -bool true
+defaults write com.apple.dock tilesize -int 30
 defaults write com.apple.dock magnification -bool false
 defaults write com.apple.dock show-recents -bool false
+defaults write com.apple.dock static-only -bool true; killall Dock
 
 # Menubar
 defaults write com.apple.menuextra.battery ShowPercent -bool true
