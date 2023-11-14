@@ -148,6 +148,10 @@ e() {
     fi
 }
 
+### emacs ###
+alias emacs='emacsclient -c -a ""'
+alias killemacs='emacsclient -e "(kill-emacs)"'
+
 ### GPG ###
 export GPG_TTY="$TTY"
 

@@ -39,5 +39,3 @@ export SHELDON_CONFIG_DIR="$ZDOTDIR"
 ### gh-red ###
 export GHRED_CONFIG_HOME="$XDG_CONFIG_HOME/gh-red"
 export GHRED_DATA_HOME="$XDG_DATA_HOME/gh-red"
-
-eval "$(/opt/homebrew/bin/brew shellenv)"
