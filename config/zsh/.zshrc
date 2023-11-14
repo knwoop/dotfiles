@@ -65,15 +65,6 @@ zshaddhistory() {
     [[ ! "$line" =~ "^(cd|history|jj?|lazygit|la|ll|ls|rm|rmdir|trash)($| )" ]]
 }
 
-chpwd() {
-    printf "\e[34m%s\e[m:\n" "${PWD/$HOME/~}"
-    if (( ${+commands[eza]} )); then
-        eza --group-directories-first --icons -a
-    else
-        ls -a
-    fi
-}
-
 function ghq-fzf() {
     local src=$(ghq list | fzf --preview "ls -laTp $(ghq root)/{} | tail -n+4 | awk '{print \$9\"/\"\$6\"/\"\$7 \" \" \$10}'")
     if [ -n "$src" ]; then

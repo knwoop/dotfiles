@@ -17,8 +17,8 @@ github = "romkatv/zsh-defer"
 apply = ["source"]
 profiles = ["eager"]
 
-[plugins.jargon]
-local = "~/.local/share/gh-red/packages/github.com/NagayamaRyoga/jargon"
+[plugins.spaceship]
+github = "spaceship-prompt/spaceship-prompt"
 apply = ["source"]
 profiles = ["eager"]
 
