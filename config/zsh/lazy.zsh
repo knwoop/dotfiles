@@ -149,7 +149,7 @@ e() {
 }
 
 ### emacs ###
-alias emacs='emacsclient -c -a ""'
+alias emacs='emacsclient -c -nw -a ""'
 alias killemacs='emacsclient -e "(kill-emacs)"'
 
 ### GPG ###

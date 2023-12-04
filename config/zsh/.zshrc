@@ -20,6 +20,7 @@ path=(
     "$GEM_HOME/bin"(N-/)
     "$GHRED_DATA_HOME/bin"(N-/)
     "$XDG_CONFIG_HOME/scripts/bin"(N-/)
+    "$VOLTA_HOME/bin"(N-/)
     "$path[@]"
 )
 
@@ -147,16 +148,17 @@ bindkey "^G"        widget::ghq::session            # C-g
 bindkey "^[g"       widget::ghq::dir                # Alt-g
 bindkey "^A"        beginning-of-line               # C-a
 bindkey "^E"        end-of-line                     # C-e
+bindkey '^B'        backward-char
+bindkey '^F'        forward-char
+bindkey '^P'        up-line-or-history
+bindkey '^N'        up-line-or-beginning-search
+bindkey '^D'        delete-char
 bindkey "^K"        kill-line                       # C-k
 bindkey "^Q"        push-line-or-edit               # C-q
 bindkey "^W"        vi-backward-kill-word           # C-w
 bindkey "^]"        ghq-fzf                         # C-]
 bindkey "^?"        backward-delete-char            # backspace
 bindkey "^[[3~"     delete-char                     # delete
-bindkey "^[[1;3D"   backward-word                   # Alt + arrow-left
-bindkey "^[[1;3C"   forward-word                    # Alt + arrow-right
-bindkey "^[^?"      vi-backward-kill-word           # Alt + backspace
-bindkey "^[[1;33~"  kill-word                       # Alt + delete
 
 # sheldon
 sheldon::load() {
@@ -177,3 +179,9 @@ sheldon::update() {
 }
 
 sheldon::load eager
+
+# The next line updates PATH for the Google Cloud SDK.
+if [ -f '/Users/knwoop/Downloads/google-cloud-sdk 2/path.zsh.inc' ]; then . '/Users/knwoop/Downloads/google-cloud-sdk 2/path.zsh.inc'; fi
+
+# The next line enables shell command completion for gcloud.
+if [ -f '/Users/knwoop/Downloads/google-cloud-sdk 2/completion.zsh.inc' ]; then . '/Users/knwoop/Downloads/google-cloud-sdk 2/completion.zsh.inc'; fi

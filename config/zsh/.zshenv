@@ -20,6 +20,8 @@ export CARGO_HOME="$XDG_DATA_HOME/cargo"
 ### Go ###
 export GOPATH="$XDG_DATA_HOME/go"
 export GO111MODULE="on"
+export GOFLAGS="-tags=e2e"
+export GOPRIVATE="github.com/x-asia/*,github.com/showcase-gig-platform/*"
 
 ### Deno ###
 export DENO_INSTALL="$XDG_DATA_HOME/deno"
@@ -39,3 +41,12 @@ export SHELDON_CONFIG_DIR="$ZDOTDIR"
 ### gh-red ###
 export GHRED_CONFIG_HOME="$XDG_CONFIG_HOME/gh-red"
 export GHRED_DATA_HOME="$XDG_DATA_HOME/gh-red"
+
+### starship ###
+export STARSHIP_CONFIG="$XDG_CONFIG_HOME/starship/starship.toml"
+export STARSHIP_CACHE="$XDG_CACHE_HOME/.starship/cache"
+
+export GITHUB_TOKEN=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
+
+### valta ###
+export VOLTA_HOME="$HOME/.volta"

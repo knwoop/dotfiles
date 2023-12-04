@@ -35,16 +35,6 @@ export default defineConfig({
       ],
     },
     {
-      name: "NagayamaRyoga/jargon",
-      async onDownload({ packageDir, bin }) {
-        await saveCommandOutput(
-          `${packageDir}/jargon.zsh`,
-          bin.jargon,
-          "init",
-        );
-      },
-    },
-    {
       name: "direnv/direnv",
       rename: [
         { from: "direnv*", to: "direnv" },

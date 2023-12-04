@@ -1,0 +1,19 @@
+% kauche
+
+# wrench: create a migration file
+./dev/bin/wrench migrate create --directory ./app/services/farm/db
+
+# wrench: gen schema.sql from db schema
+make spanner-load-schema app=farm
+
+# wrench: set migration version
+make spanner-set-schema-version app=farm version=<version>
+
+# wrench: set up farm db
+SPANNER_EMULATOR_HOST=localhost:10004 make spanner-db spanner-seed spanner-go app=farm
+
+
+# Docker: e2etests starts
+SPANNER_EMULATOR_HOST=localhost:10004 go test -tags=e2e -e2emode=coverage -v -run=<test_name> ./...
+
+$ test_name: testfuncs
