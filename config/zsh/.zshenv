@@ -18,10 +18,14 @@ export RUSTUP_HOME="$XDG_DATA_HOME/rustup"
 export CARGO_HOME="$XDG_DATA_HOME/cargo"
 
 ### Go ###
-export GOPATH="$XDG_DATA_HOME/go"
-export GO111MODULE="on"
+export GOROOT=$(go1.22.0 env GOROOT)
+## export GOPATH="$HOME/go"
+## export GOPATH="$XDG_DATA_HOME/go"
+export GOMODCACHE="$XDG_CACHE_HOME/go_mod"
+export GO111MODULE="auto"
 export GOFLAGS="-tags=e2e"
 export GOPRIVATE="github.com/x-asia/*,github.com/showcase-gig-platform/*"
+alias go='go1.22.0'
 
 ### Deno ###
 export DENO_INSTALL="$XDG_DATA_HOME/deno"

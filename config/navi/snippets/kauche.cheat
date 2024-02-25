@@ -3,6 +3,9 @@
 # wrench: create a migration file
 ./dev/bin/wrench migrate create --directory ./app/services/farm/db
 
+# wrench: migraete
+make spanner-migrate app=<app>
+
 # wrench: gen schema.sql from db schema
 make spanner-load-schema app=farm
 
@@ -17,3 +20,6 @@ SPANNER_EMULATOR_HOST=localhost:10004 make spanner-db spanner-seed spanner-go ap
 SPANNER_EMULATOR_HOST=localhost:10004 go test -tags=e2e -e2emode=coverage -v -run=<test_name> ./...
 
 $ test_name: testfuncs
+
+# generate kustomize file
+kustomize build --load-restrictor LoadRestrictionsNone ./run/services/<service_name>/<env> > ./run/services/<service_name>/<env>.yaml
