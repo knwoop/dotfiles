@@ -186,7 +186,7 @@ export MYSQL_HISTFILE="$XDG_STATE_HOME/mysql_history"
 export PSQL_HISTORY="$XDG_STATE_HOME/psql_history"
 
 ### FZF ###
-export FZF_DEFAULT_OPTS='--reverse --border --ansi --bind="ctrl-d:print-query,ctrl-p:replace-query"'
+export FZF_DEFAULT_OPTS='--reverse --border --ansi --bind="ctrl-d:print-query,ctrl-p:up"'
 export FZF_DEFAULT_COMMAND='fd --hidden --color=always'
 
 ### ripgrep ###

@@ -184,7 +184,7 @@ ZSH_GIT_PROMPT_FORCE_BLANK=1
 # }}}
 
 ### aliases ###
-alias e='emacsclient -c -a ""'
+alias em='emacsclient -c -a ""'
 
 ### key bindings ###
 widget::history() {
