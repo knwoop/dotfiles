@@ -1,0 +1,6 @@
+% basemachina api
+
+# basemachina api: scenario test
+LOG_LEVEL=ERROR go test -v -run '<test_name>' ./e2etest/... -count=1
+
+$ test_name: testfuncs

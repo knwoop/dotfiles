@@ -1,0 +1,6 @@
+% python
+# venv: use venv
+python3.13 -m venv .venv
+
+# activate venv
+source .venv/bin/activate

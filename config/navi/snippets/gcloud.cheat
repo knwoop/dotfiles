@@ -1,0 +1,10 @@
+% gcloud
+
+# login: default login
+gcloud auth application-default login
+
+# conf: list
+gcloud config configurations list
+
+# conf: activate
+gcloud config configurations activate <name>

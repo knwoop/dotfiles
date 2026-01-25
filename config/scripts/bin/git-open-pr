@@ -1,0 +1,21 @@
+#!/bin/bash
+
+pr=$(git log --format=%B -n 1 "${1}" | head -n 1 | tr -d '\n' | perl -ne 'm|\(#(\d+?)\)$|; print $1;')
+
+repository=$( \
+    git remote -v | grep -E 'origin.*fetch' | \
+    perl -ne 'm%^.+?github\.com(?:/|:)(.+?)(.git){0,1} \(fetch\)$%; print $1;'
+)
+
+if test -z "$pr"; then
+    default_branch=$(curl -s -H "Authorization: token $GITHUB_TOKEN" "https://api.github.com/repos/$repository" | jq -r .default_branch)
+
+    pr=$( \
+        git log --merges --oneline --reverse --ancestry-path "${1}...origin/${default_branch}" | \
+        grep 'Merge pull request #' | \
+        head -n 1 | \
+        perl -ne 'm/^.+?\s#(\d+?)\s.*$/; print $1;'
+    )
+fi
+
+open "https://github.com/${repository}/pull/${pr}"
