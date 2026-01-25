@@ -1,25 +1,33 @@
 % kauche
 
 # wrench: create a migration file
-./dev/bin/wrench migrate create --directory ./app/services/farm/db
+make -j spanner-migrate-create app=<app>
 
 # wrench: migraete
 make spanner-migrate app=<app>
 
 # wrench: gen schema.sql from db schema
-make spanner-load-schema app=farm
+make spanner-load-schema app=<app>
 
 # wrench: set migration version
 make spanner-set-schema-version app=farm version=<version>
 
 # wrench: set up farm db
-SPANNER_EMULATOR_HOST=localhost:10004 make spanner-db spanner-seed spanner-go app=farm
+make spanner-db spanner-seed spanner-go app=farm
 
+# e2e test root for farm
+go test -tags=e2e -shuffle=on -v -run <test_name> ./app/services/farm/e2etests/...
+
+# e2e test root for farm on root
+cd ./app/services/farm/e2etests/ && go test -tags=e2e -shuffle=on -v -run <test_name> ./...
 
 # Docker: e2etests starts
-SPANNER_EMULATOR_HOST=localhost:10004 go test -tags=e2e -e2emode=coverage -v -run=<test_name> ./...
+go test -tags=e2e -e2emode=coverage -v -run <test_name> ./...
 
 $ test_name: testfuncs
 
 # generate kustomize file
 kustomize build --load-restrictor LoadRestrictionsNone ./run/services/<service_name>/<env> > ./run/services/<service_name>/<env>.yaml
+
+# phone number hash
+cd scripts/generate_phone_number_digest && go run main.go --phone=<number>

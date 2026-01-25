@@ -18,14 +18,15 @@ export RUSTUP_HOME="$XDG_DATA_HOME/rustup"
 export CARGO_HOME="$XDG_DATA_HOME/cargo"
 
 ### Go ###
-export GOROOT=$(go1.22.0 env GOROOT)
+export GOPATH="$XDG_DATA_HOME/go"
 ## export GOPATH="$HOME/go"
-## export GOPATH="$XDG_DATA_HOME/go"
+alias go='go1.25.1'
+export GOROOT=$(go env GOROOT)
 export GOMODCACHE="$XDG_CACHE_HOME/go_mod"
-export GO111MODULE="auto"
-export GOFLAGS="-tags=e2e"
+export GO111MODULE="on"
+export GOFLAGS="-tags=e2e,wireinject"
 export GOPRIVATE="github.com/x-asia/*,github.com/showcase-gig-platform/*"
-alias go='go1.22.0'
+export GOTOOLCHAIN="go1.25.1"
 
 ### Deno ###
 export DENO_INSTALL="$XDG_DATA_HOME/deno"
@@ -46,11 +47,13 @@ export SHELDON_CONFIG_DIR="$ZDOTDIR"
 export GHRED_CONFIG_HOME="$XDG_CONFIG_HOME/gh-red"
 export GHRED_DATA_HOME="$XDG_DATA_HOME/gh-red"
 
-### starship ###
-export STARSHIP_CONFIG="$XDG_CONFIG_HOME/starship/starship.toml"
-export STARSHIP_CACHE="$XDG_CACHE_HOME/.starship/cache"
+### spaceship ###
+export SPACESHIP_CONFIG="$ZDOTDIR/spaceshiprc.zsh"
 
-export GITHUB_TOKEN=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
+# export GITHUB_TOKEN=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
 
 ### valta ###
 export VOLTA_HOME="$HOME/.volta"
+
+# uv
+export PATH="/Users/knwoop/.local/share/../bin:$PATH"

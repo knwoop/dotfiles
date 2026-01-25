@@ -1,7 +1,7 @@
 hs.alert.show('Config loaded')
 
 -- Reload
-hs.hotkey.bind({'cmd', 'alt', 'ctrl'}, 'R', function()
+hs.hotkey.bind({ 'cmd', 'alt', 'ctrl' }, 'R', function()
   hs.reload()
 end)
 
@@ -27,7 +27,28 @@ end
 
 -- shortcuts
 -- remapRepeat({'cmd'}, 'Y', keyStroke({'cmd', 'shift'}, 'Z'))
-remap({'cmd', 'ctrl'}, 't', launch('Alacritty'))
-remap({'cmd', 'ctrl'}, 'v', launch('Visual Studio Code'))
-remap({'cmd', 'ctrl'}, 'e', launch('Sublime Text'))
-remap({'cmd', 'ctrl'}, 'c', launch('Google Chrome'))
+remap({ 'cmd', 'ctrl' }, 't', launch('kitty'))
+remap({ 'cmd', 'ctrl' }, 'v', launch('Visual Studio Code'))
+remap({ 'cmd', 'ctrl' }, 'e', launch('Sublime Text'))
+remap({ 'cmd', 'ctrl' }, 'c', launch('Google Chrome'))
+
+deleteEvent = hs.eventtap.event.newKeyEvent({}, "delete", true)
+repeatTimer = nil
+
+downFn = function()
+  deleteEvent:post()
+  repeatTimer = hs.timer.doAfter(hs.eventtap.keyRepeatDelay(), function()
+    repeatTimer = hs.timer.doEvery(hs.eventtap.keyRepeatInterval(), function()
+      deleteEvent:post()
+    end)
+  end)
+end
+
+upFn = function()
+  if repeatTimer then
+    repeatTimer:stop()
+    repeatTimer = nil
+  end
+end
+
+hs.hotkey.bind({ "ctrl" }, "h", downFn, upFn, nil)

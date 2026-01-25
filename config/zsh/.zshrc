@@ -10,6 +10,8 @@ path=(
     '/usr/sbin'(N-/)
     '/sbin'(N-/)
     '/opt/homebrew/bin'(N-/)
+    '/opt/homebrew/opt/mysql/bin'(N-/)
+    '$HOME/.venv/bin'(N-/)
 )
 
 path=(
@@ -181,6 +183,9 @@ ZSH_GIT_PROMPT_SHOW_STASH=1
 ZSH_GIT_PROMPT_FORCE_BLANK=1
 # }}}
 
+### aliases ###
+alias e='emacsclient -c -a ""'
+
 ### key bindings ###
 widget::history() {
     local selected="$(history -inr 1 | fzf --exit-0 --query "$LBUFFER" | cut -d' ' -f4- | sed 's/\\n/\n/g')"
@@ -291,3 +296,11 @@ if [ -f '/Users/knwoop/Downloads/google-cloud-sdk 2/path.zsh.inc' ]; then . '/Us
 
 # The next line enables shell command completion for gcloud.
 if [ -f '/Users/knwoop/Downloads/google-cloud-sdk 2/completion.zsh.inc' ]; then . '/Users/knwoop/Downloads/google-cloud-sdk 2/completion.zsh.inc'; fi
+
+# pnpm
+export PNPM_HOME="/Users/knwoop/.local/share/pnpm"
+case ":$PATH:" in
+  *":$PNPM_HOME:"*) ;;
+  *) export PATH="$PNPM_HOME:$PATH" ;;
+esac
+# pnpm end

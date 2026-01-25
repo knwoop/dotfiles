@@ -43,3 +43,7 @@ _test*
 
 ### e2etest for go ###
 e2e_coverage.out
+
+.aider*
+
+**/.claude/settings.local.json
