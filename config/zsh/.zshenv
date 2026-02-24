@@ -20,13 +20,13 @@ export CARGO_HOME="$XDG_DATA_HOME/cargo"
 ### Go ###
 export GOPATH="$XDG_DATA_HOME/go"
 ## export GOPATH="$HOME/go"
-alias go='go1.25.1'
+alias go='go1.26.0'
 export GOROOT=$(go env GOROOT)
 export GOMODCACHE="$XDG_CACHE_HOME/go_mod"
 export GO111MODULE="on"
 export GOFLAGS="-tags=e2e,wireinject"
 export GOPRIVATE="github.com/x-asia/*,github.com/showcase-gig-platform/*"
-export GOTOOLCHAIN="go1.25.1"
+export GOTOOLCHAIN="auto"
 
 ### Deno ###
 export DENO_INSTALL="$XDG_DATA_HOME/deno"
@@ -52,8 +52,10 @@ export SPACESHIP_CONFIG="$ZDOTDIR/spaceshiprc.zsh"
 
 # export GITHUB_TOKEN=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
 
-### valta ###
-export VOLTA_HOME="$HOME/.volta"
+### mise ###
+export MISE_CONFIG_DIR="$XDG_CONFIG_HOME/mise"
+export MISE_DATA_DIR="$XDG_DATA_HOME/mise"
+export MISE_CACHE_DIR="$XDG_CACHE_HOME/mise"
 
 # uv
 export PATH="/Users/knwoop/.local/share/../bin:$PATH"

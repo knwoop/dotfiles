@@ -22,7 +22,7 @@ path=(
     "$GEM_HOME/bin"(N-/)
     "$GHRED_DATA_HOME/bin"(N-/)
     "$XDG_CONFIG_HOME/scripts/bin"(N-/)
-    "$VOLTA_HOME/bin"(N-/)
+    "$MISE_DATA_DIR/shims"(N-/)
     "$path[@]"
 )
 
