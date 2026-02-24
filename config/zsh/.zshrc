@@ -17,6 +17,7 @@ path=(
 path=(
     "$HOME/.local/bin"(N-/)
     "$CARGO_HOME/bin"(N-/)
+    "$GOROOT/bin"(N-/)
     "$GOPATH/bin"(N-/)
     "$DENO_INSTALL/bin"(N-/)
     "$GEM_HOME/bin"(N-/)
@@ -297,10 +298,3 @@ if [ -f '/Users/knwoop/Downloads/google-cloud-sdk 2/path.zsh.inc' ]; then . '/Us
 # The next line enables shell command completion for gcloud.
 if [ -f '/Users/knwoop/Downloads/google-cloud-sdk 2/completion.zsh.inc' ]; then . '/Users/knwoop/Downloads/google-cloud-sdk 2/completion.zsh.inc'; fi
 
-# pnpm
-export PNPM_HOME="/Users/knwoop/.local/share/pnpm"
-case ":$PATH:" in
-  *":$PNPM_HOME:"*) ;;
-  *) export PATH="$PNPM_HOME:$PATH" ;;
-esac
-# pnpm end

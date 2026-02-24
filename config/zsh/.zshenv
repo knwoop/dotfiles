@@ -19,14 +19,13 @@ export CARGO_HOME="$XDG_DATA_HOME/cargo"
 
 ### Go ###
 export GOPATH="$XDG_DATA_HOME/go"
-## export GOPATH="$HOME/go"
-alias go='go1.26.0'
-export GOROOT=$(go env GOROOT)
+export GOROOT="$HOME/sdk/go1.26.0"
 export GOMODCACHE="$XDG_CACHE_HOME/go_mod"
 export GO111MODULE="on"
 export GOFLAGS="-tags=e2e,wireinject"
 export GOPRIVATE="github.com/x-asia/*,github.com/showcase-gig-platform/*"
 export GOTOOLCHAIN="auto"
+export PATH="$GOROOT/bin:$GOPATH/bin:$PATH"
 
 ### Deno ###
 export DENO_INSTALL="$XDG_DATA_HOME/deno"
