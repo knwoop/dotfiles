@@ -25,7 +25,6 @@ export GO111MODULE="on"
 export GOFLAGS="-tags=e2e,wireinject"
 export GOPRIVATE="github.com/x-asia/*,github.com/showcase-gig-platform/*"
 export GOTOOLCHAIN="auto"
-export PATH="$GOROOT/bin:$GOPATH/bin:$PATH"
 
 ### Deno ###
 export DENO_INSTALL="$XDG_DATA_HOME/deno"
@@ -49,12 +48,11 @@ export GHRED_DATA_HOME="$XDG_DATA_HOME/gh-red"
 ### spaceship ###
 export SPACESHIP_CONFIG="$ZDOTDIR/spaceshiprc.zsh"
 
-# export GITHUB_TOKEN=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
-
 ### mise ###
 export MISE_CONFIG_DIR="$XDG_CONFIG_HOME/mise"
 export MISE_DATA_DIR="$XDG_DATA_HOME/mise"
 export MISE_CACHE_DIR="$XDG_CACHE_HOME/mise"
+export PATH="$HOME/.local/share/mise/shims:$PATH"
 
 # uv
 export PATH="/Users/knwoop/.local/share/../bin:$PATH"

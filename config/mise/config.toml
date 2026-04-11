@@ -1,9 +1,12 @@
 [tools]
+bun = "latest"
 node = "25.6.1"
 pnpm = "latest"
+python = "latest"
 
 [settings]
 legacy_version_file = true
+idiomatic_version_file_enable_tools = ["node"]
 
 [settings.node]
 gpg_verify = false

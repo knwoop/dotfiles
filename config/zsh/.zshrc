@@ -185,7 +185,7 @@ ZSH_GIT_PROMPT_FORCE_BLANK=1
 # }}}
 
 ### aliases ###
-alias em='emacsclient -c -a ""'
+alias em='emacsclient -c -a "" .'
 
 ### key bindings ###
 widget::history() {
@@ -249,15 +249,89 @@ widget::ghq::session() {
     zle -R -c # refresh screen
 }
 
+widget::muxac::source() {
+    local green="\e[32m" yellow="\e[33m" red="\e[31m" reset="\e[m"
+    local json
+    json="$(muxac list --json 2>/dev/null)" || return
+    echo "$json" | python3 -c "
+import sys, json
+data = json.load(sys.stdin)
+colors = {'running': '\033[32m', 'waiting': '\033[33m', 'stopped': '\033[31m'}
+reset = '\033[0m'
+for s in data.get('sessions', []):
+    c = colors.get(s['status'], reset)
+    print(f\"{c}{s['status']:<10} {s['name']:<40} {s['directory']}{reset}\")
+"
+}
+muxac-new() {
+    local root repo_dir session_prefix branch
+    root="$(ghq root 2>/dev/null)"
+    repo_dir="$(git rev-parse --show-toplevel 2>/dev/null)" || { echo "Not in a git repo"; return 1; }
+    session_prefix="$(python3 -c "import os; print(os.path.relpath('$repo_dir', '$root').replace(':', '-').replace('.', '-').replace(' ', '-'))")"
+
+    echo -n "Branch name: "
+    read branch
+    [[ -z "$branch" ]] && return
+
+    local worktree_dir="$repo_dir/.worktrees/$branch"
+    local session_name="$session_prefix/$branch"
+
+    # ensure .worktrees/ in .gitignore
+    local gitignore="$repo_dir/.gitignore"
+    if ! grep -q '^\\.worktrees/?$' "$gitignore" 2>/dev/null; then
+        echo '.worktrees/' >> "$gitignore"
+    fi
+
+    git worktree add -b "$branch" "$worktree_dir" || return
+    muxac new --name "$session_name" --dir "$worktree_dir" claude
+}
+widget::muxac::new() {
+    local selected="$(widget::ghq::select)"
+    [[ -z "$selected" ]] && return
+
+    local repo_dir="$(ghq list --exact --full-path "$selected")"
+    [[ -z "$repo_dir" ]] && return
+
+    BUFFER="cd ${(q)repo_dir} && muxac-new"
+    zle accept-line
+    zle -R -c
+}
+widget::muxac::select() {
+    widget::muxac::source | fzf --exit-0 --ansi | awk '{ print $2, $3 }'
+}
+widget::muxac::attach() {
+    local selected name dir
+    selected="$(widget::muxac::select)"
+    if [[ -z "$selected" ]]; then
+        zle -M "muxac: no sessions"
+        return
+    fi
+
+    name="$(echo "$selected" | awk '{ print $1 }')"
+    dir="$(echo "$selected" | awk '{ print $2 }')"
+
+    if [[ -z "$TMUX" ]]; then
+        BUFFER="muxac attach --name ${(q)name} --dir ${(q)dir}"
+        zle accept-line
+    else
+        muxac attach --name "$name" --dir "$dir"
+    fi
+    zle -R -c
+}
+
 zle -N widget::history
 zle -N widget::ghq::dir
 zle -N widget::ghq::session
+zle -N widget::muxac::new
+zle -N widget::muxac::attach
 zle -N forward-kill-word
 zle -N ghq-fzf
 
 bindkey "^R"        widget::history                 # C-r
 bindkey "^G"        widget::ghq::session            # C-g
 bindkey "^[g"       widget::ghq::dir                # Alt-g
+bindkey "^[n"       widget::muxac::new              # Alt-n (ghq -> muxac new)
+bindkey "^[m"       widget::muxac::attach           # Alt-m (muxac attach)
 bindkey "^A"        beginning-of-line               # C-a
 bindkey "^E"        end-of-line                     # C-e
 bindkey '^B'        backward-char
