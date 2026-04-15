@@ -35,6 +35,7 @@ brew "vim"
 brew "wget"
 
 cask "alacritty"
+cask "gcloud-cli"
 cask "bitwarden"
 cask "docker"
 cask "firefox"
