@@ -344,6 +344,63 @@ widget::tmux::attach() {
     zle accept-line
     zle -R -c
 }
+widget::gwt::remove() {
+    git rev-parse --show-toplevel >/dev/null 2>&1 || { zle -M "not in a git repo"; return; }
+
+    local selected
+    selected=$(git worktree list | awk '{print $1}' | fzf --reverse --prompt="remove worktree> ")
+    [[ -z "$selected" ]] && { zle reset-prompt; return; }
+
+    local main_wt
+    main_wt=$(git worktree list | awk 'NR==1 {print $1}')
+    if [[ "$selected" == "$main_wt" ]]; then
+        zle -M "refusing to remove main worktree"
+        return
+    fi
+
+    local session_name branch has_session=0
+    session_name=$(_wt_session_name_for "$selected") || session_name=""
+    branch="${session_name##*/}"
+    [[ -n "$session_name" ]] && tmux has-session -t "=$session_name" 2>/dev/null && has_session=1
+
+    print
+    print "Worktree: $selected"
+    [[ -n "$branch" ]] && print "Branch:   $branch"
+    if (( has_session )); then
+        print "Session:  $session_name (will be killed)"
+    else
+        print "Session:  (none)"
+    fi
+
+    local ans flags=""
+    print -n "Remove? [y/N/f=force] "
+    read -k 1 ans
+    print
+    case "$ans" in
+        y|Y) ;;
+        f|F) flags="--force" ;;
+        *) zle reset-prompt; return ;;
+    esac
+
+    if ! git worktree remove ${flags:+$flags} "$selected"; then
+        zle -M "git worktree remove failed"
+        return
+    fi
+
+    (( has_session )) && tmux kill-session -t "=$session_name" 2>/dev/null
+
+    if [[ -n "$branch" ]]; then
+        print -n "Delete branch '$branch'? [y/N/f=force] "
+        read -k 1 ans
+        print
+        case "$ans" in
+            y|Y) git branch -d "$branch" ;;
+            f|F) git branch -D "$branch" ;;
+        esac
+    fi
+
+    zle reset-prompt
+}
 
 zle -N widget::history
 zle -N widget::ghq::dir
@@ -351,6 +408,7 @@ zle -N widget::ghq::session
 zle -N widget::wt::new
 zle -N widget::tmux::attach
 zle -N widget::gwt::cd
+zle -N widget::gwt::remove
 zle -N forward-kill-word
 zle -N ghq-fzf
 
@@ -360,6 +418,7 @@ bindkey "^[g"       widget::ghq::dir                # Alt-g
 bindkey "^[n"       widget::wt::new                 # Alt-n (worktree + new tmux session)
 bindkey "^[m"       widget::tmux::attach            # Alt-m (pick tmux session + switch)
 bindkey "^[w"       widget::gwt::cd                 # Alt-w (worktree -> switch/attach)
+bindkey "^[d"       widget::gwt::remove             # Alt-d (pick worktree + remove)
 bindkey "^A"        beginning-of-line               # C-a
 bindkey "^E"        end-of-line                     # C-e
 bindkey '^B'        backward-char
