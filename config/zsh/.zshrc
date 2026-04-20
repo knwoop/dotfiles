@@ -255,24 +255,15 @@ gwt() {
     cd "$dir"
 }
 
-# Print muxac session name for a worktree dir: "<repo>/<branch>".
-_muxac_session_name_for() {
+# Print tmux session name for a worktree dir: "<repo>/<branch>".
+_wt_session_name_for() {
     local dir="$1" prefix branch
     prefix=$(basename "$(dirname "$(git -C "$dir" rev-parse --git-common-dir)")") || return 1
     branch=$(git -C "$dir" rev-parse --abbrev-ref HEAD) || return 1
     printf '%s/%s\n' "$prefix" "$branch"
 }
 
-# Return 0 if muxac's tmux session for (name, dir) is alive on the muxac socket.
-# Mirrors pathkey.TmuxSessionName: "muxac-" + name + dir-with-"/"->"@" and "."->"_".
-_muxac_session_alive() {
-    local name="$1" dir="$2" encoded
-    encoded="${dir//\//@}"
-    encoded="${encoded//./_}"
-    tmux -L muxac has-session -t "=muxac-${name}${encoded}" 2>/dev/null
-}
-
-muxac-new() {
+wt-new() {
     git rev-parse --show-toplevel >/dev/null 2>&1 || { echo "Not in a git repo"; return 1; }
 
     echo -n "Branch name: "
@@ -288,20 +279,15 @@ muxac-new() {
     session_name="$session_prefix/$branch"
 
     if [[ -n "$TMUX" ]]; then
-        # Create a new outer-tmux session (default socket) running `muxac new`,
-        # then switch the current client to it.
-        tmux new-session -d -s "$session_name" -c "$dir" \
-            "muxac new --name ${(q)session_name} --dir ${(q)dir} claude"
+        tmux new-session -d -s "$session_name" -c "$dir" claude
         tmux switch-client -t "$session_name"
         return
     fi
 
-    # muxac doesn't pass --dir to `tmux new-session -c`; the spawned session
-    # inherits cwd from whoever called muxac. Subshell-cd into the worktree.
-    ( cd "$dir" && muxac new --name "$session_name" --dir "$dir" claude )
+    tmux new-session -s "$session_name" -c "$dir" claude
 }
-widget::muxac::new() {
-    BUFFER="muxac-new"
+widget::wt::new() {
+    BUFFER="wt-new"
     zle accept-line
     zle -R -c
 }
@@ -311,59 +297,50 @@ widget::gwt::cd() {
     selected=$(git worktree list | awk '{print $1}' | fzf --query "$LBUFFER" --prompt="worktree> ")
     [[ -z "$selected" ]] && return
 
-    local session_name branch
-    session_name=$(_muxac_session_name_for "$selected")
+    local session_name
+    session_name=$(_wt_session_name_for "$selected")
     if [[ -z "$session_name" ]]; then
         BUFFER="cd ${(q)selected}"
         zle accept-line
         zle -R -c
         return
     fi
-    branch="${session_name##*/}"
-
-    local cmd
-    if _muxac_session_alive "$session_name" "$selected"; then
-        cmd="muxac attach --name ${(q)session_name} --dir ${(q)selected}"
-    else
-        cmd="muxac new --name ${(q)session_name} --dir ${(q)selected} claude"
-    fi
 
     if [[ -n "$TMUX" ]]; then
-        # Reuse existing outer-tmux session with the same name, or create one.
         if ! tmux has-session -t "=$session_name" 2>/dev/null; then
-            tmux new-session -d -s "$session_name" -c "$selected" "$cmd"
+            tmux new-session -d -s "$session_name" -c "$selected" claude
         fi
         tmux switch-client -t "$session_name"
         zle -R -c
         return
     fi
 
-    BUFFER="$cmd"
+    if tmux has-session -t "=$session_name" 2>/dev/null; then
+        BUFFER="tmux attach-session -t ${(q)session_name}"
+    else
+        BUFFER="tmux new-session -s ${(q)session_name} -c ${(q)selected} claude"
+    fi
     zle accept-line
     zle -R -c
 }
-widget::muxac::attach() {
-    local selected name dir
-    selected="$(muxac-pick --print)"
+widget::tmux::attach() {
+    local selected
+    selected=$(tmux list-sessions -F '#{session_name}' 2>/dev/null \
+        | fzf --reverse \
+              --preview 'tmux capture-pane -ept {}:.0 -p 2>/dev/null | tail -n 80' \
+              --preview-window=right:60%)
     if [[ -z "$selected" ]]; then
-        zle -M "muxac: no sessions"
-        return
-    fi
-
-    name="${selected%%	*}"
-    dir="${selected#*	}"
-
-    if [[ -n "$TMUX" ]]; then
-        if ! tmux has-session -t "=$name" 2>/dev/null; then
-            tmux new-session -d -s "$name" -c "$dir" \
-                "muxac attach --name ${(q)name} --dir ${(q)dir}"
-        fi
-        tmux switch-client -t "$name"
         zle -R -c
         return
     fi
 
-    BUFFER="muxac attach --name ${(q)name} --dir ${(q)dir}"
+    if [[ -n "$TMUX" ]]; then
+        tmux switch-client -t "$selected"
+        zle -R -c
+        return
+    fi
+
+    BUFFER="tmux attach-session -t ${(q)selected}"
     zle accept-line
     zle -R -c
 }
@@ -371,8 +348,8 @@ widget::muxac::attach() {
 zle -N widget::history
 zle -N widget::ghq::dir
 zle -N widget::ghq::session
-zle -N widget::muxac::new
-zle -N widget::muxac::attach
+zle -N widget::wt::new
+zle -N widget::tmux::attach
 zle -N widget::gwt::cd
 zle -N forward-kill-word
 zle -N ghq-fzf
@@ -380,9 +357,9 @@ zle -N ghq-fzf
 bindkey "^R"        widget::history                 # C-r
 bindkey "^G"        widget::ghq::session            # C-g
 bindkey "^[g"       widget::ghq::dir                # Alt-g
-bindkey "^[n"       widget::muxac::new              # Alt-n (gwt -> muxac new)
-bindkey "^[m"       widget::muxac::attach           # Alt-m (muxac attach)
-bindkey "^[w"       widget::gwt::cd                 # Alt-w (worktree -> cd)
+bindkey "^[n"       widget::wt::new                 # Alt-n (worktree + new tmux session)
+bindkey "^[m"       widget::tmux::attach            # Alt-m (pick tmux session + switch)
+bindkey "^[w"       widget::gwt::cd                 # Alt-w (worktree -> switch/attach)
 bindkey "^A"        beginning-of-line               # C-a
 bindkey "^E"        end-of-line                     # C-e
 bindkey '^B'        backward-char
