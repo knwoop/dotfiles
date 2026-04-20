@@ -249,73 +249,122 @@ widget::ghq::session() {
     zle -R -c # refresh screen
 }
 
-widget::muxac::source() {
-    local green="\e[32m" yellow="\e[33m" red="\e[31m" reset="\e[m"
-    local json
-    json="$(muxac list --json 2>/dev/null)" || return
-    echo "$json" | python3 -c "
-import sys, json
-data = json.load(sys.stdin)
-colors = {'running': '\033[32m', 'waiting': '\033[33m', 'stopped': '\033[31m'}
-reset = '\033[0m'
-for s in data.get('sessions', []):
-    c = colors.get(s['status'], reset)
-    print(f\"{c}{s['status']:<10} {s['name']:<40} {s['directory']}{reset}\")
-"
+gwt() {
+    local dir
+    dir=$(command gwt "$@") || return $?
+    cd "$dir"
 }
+
+# Print muxac session name for a worktree dir: "<repo>/<branch>".
+_muxac_session_name_for() {
+    local dir="$1" prefix branch
+    prefix=$(basename "$(dirname "$(git -C "$dir" rev-parse --git-common-dir)")") || return 1
+    branch=$(git -C "$dir" rev-parse --abbrev-ref HEAD) || return 1
+    printf '%s/%s\n' "$prefix" "$branch"
+}
+
+# Return 0 if muxac's tmux session for (name, dir) is alive on the muxac socket.
+# Mirrors pathkey.TmuxSessionName: "muxac-" + name + dir-with-"/"->"@" and "."->"_".
+_muxac_session_alive() {
+    local name="$1" dir="$2" encoded
+    encoded="${dir//\//@}"
+    encoded="${encoded//./_}"
+    tmux -L muxac has-session -t "=muxac-${name}${encoded}" 2>/dev/null
+}
+
 muxac-new() {
-    local root repo_dir session_prefix branch
-    root="$(ghq root 2>/dev/null)"
-    repo_dir="$(git rev-parse --show-toplevel 2>/dev/null)" || { echo "Not in a git repo"; return 1; }
-    session_prefix="$(python3 -c "import os; print(os.path.relpath('$repo_dir', '$root').replace(':', '-').replace('.', '-').replace(' ', '-'))")"
+    git rev-parse --show-toplevel >/dev/null 2>&1 || { echo "Not in a git repo"; return 1; }
 
     echo -n "Branch name: "
+    local branch
     read branch
     [[ -z "$branch" ]] && return
 
-    local worktree_dir="$repo_dir/.worktrees/$branch"
-    local session_name="$session_prefix/$branch"
+    local dir
+    dir=$(command gwt "$branch") || return
 
-    # ensure .worktrees/ in .gitignore
-    local gitignore="$repo_dir/.gitignore"
-    if ! grep -q '^\\.worktrees/?$' "$gitignore" 2>/dev/null; then
-        echo '.worktrees/' >> "$gitignore"
+    local session_prefix session_name
+    session_prefix=$(basename "$(dirname "$(git -C "$dir" rev-parse --git-common-dir)")")
+    session_name="$session_prefix/$branch"
+
+    if [[ -n "$TMUX" ]]; then
+        # Create a new outer-tmux session (default socket) running `muxac new`,
+        # then switch the current client to it.
+        tmux new-session -d -s "$session_name" -c "$dir" \
+            "muxac new --name ${(q)session_name} --dir ${(q)dir} claude"
+        tmux switch-client -t "$session_name"
+        return
     fi
 
-    git worktree add -b "$branch" "$worktree_dir" || return
-    muxac new --name "$session_name" --dir "$worktree_dir" claude
+    # muxac doesn't pass --dir to `tmux new-session -c`; the spawned session
+    # inherits cwd from whoever called muxac. Subshell-cd into the worktree.
+    ( cd "$dir" && muxac new --name "$session_name" --dir "$dir" claude )
 }
 widget::muxac::new() {
-    local selected="$(widget::ghq::select)"
-    [[ -z "$selected" ]] && return
-
-    local repo_dir="$(ghq list --exact --full-path "$selected")"
-    [[ -z "$repo_dir" ]] && return
-
-    BUFFER="cd ${(q)repo_dir} && muxac-new"
+    BUFFER="muxac-new"
     zle accept-line
     zle -R -c
 }
-widget::muxac::select() {
-    widget::muxac::source | fzf --exit-0 --ansi | awk '{ print $2, $3 }'
+widget::gwt::cd() {
+    git rev-parse --show-toplevel >/dev/null 2>&1 || { zle -M "not in a git repo"; return; }
+    local selected
+    selected=$(git worktree list | awk '{print $1}' | fzf --query "$LBUFFER" --prompt="worktree> ")
+    [[ -z "$selected" ]] && return
+
+    local session_name branch
+    session_name=$(_muxac_session_name_for "$selected")
+    if [[ -z "$session_name" ]]; then
+        BUFFER="cd ${(q)selected}"
+        zle accept-line
+        zle -R -c
+        return
+    fi
+    branch="${session_name##*/}"
+
+    local cmd
+    if _muxac_session_alive "$session_name" "$selected"; then
+        cmd="muxac attach --name ${(q)session_name} --dir ${(q)selected}"
+    else
+        cmd="muxac new --name ${(q)session_name} --dir ${(q)selected} claude"
+    fi
+
+    if [[ -n "$TMUX" ]]; then
+        # Reuse existing outer-tmux session with the same name, or create one.
+        if ! tmux has-session -t "=$session_name" 2>/dev/null; then
+            tmux new-session -d -s "$session_name" -c "$selected" "$cmd"
+        fi
+        tmux switch-client -t "$session_name"
+        zle -R -c
+        return
+    fi
+
+    BUFFER="$cmd"
+    zle accept-line
+    zle -R -c
 }
 widget::muxac::attach() {
     local selected name dir
-    selected="$(widget::muxac::select)"
+    selected="$(muxac-pick --print)"
     if [[ -z "$selected" ]]; then
         zle -M "muxac: no sessions"
         return
     fi
 
-    name="$(echo "$selected" | awk '{ print $1 }')"
-    dir="$(echo "$selected" | awk '{ print $2 }')"
+    name="${selected%%	*}"
+    dir="${selected#*	}"
 
-    if [[ -z "$TMUX" ]]; then
-        BUFFER="muxac attach --name ${(q)name} --dir ${(q)dir}"
-        zle accept-line
-    else
-        muxac attach --name "$name" --dir "$dir"
+    if [[ -n "$TMUX" ]]; then
+        if ! tmux has-session -t "=$name" 2>/dev/null; then
+            tmux new-session -d -s "$name" -c "$dir" \
+                "muxac attach --name ${(q)name} --dir ${(q)dir}"
+        fi
+        tmux switch-client -t "$name"
+        zle -R -c
+        return
     fi
+
+    BUFFER="muxac attach --name ${(q)name} --dir ${(q)dir}"
+    zle accept-line
     zle -R -c
 }
 
@@ -324,14 +373,16 @@ zle -N widget::ghq::dir
 zle -N widget::ghq::session
 zle -N widget::muxac::new
 zle -N widget::muxac::attach
+zle -N widget::gwt::cd
 zle -N forward-kill-word
 zle -N ghq-fzf
 
 bindkey "^R"        widget::history                 # C-r
 bindkey "^G"        widget::ghq::session            # C-g
 bindkey "^[g"       widget::ghq::dir                # Alt-g
-bindkey "^[n"       widget::muxac::new              # Alt-n (ghq -> muxac new)
+bindkey "^[n"       widget::muxac::new              # Alt-n (gwt -> muxac new)
 bindkey "^[m"       widget::muxac::attach           # Alt-m (muxac attach)
+bindkey "^[w"       widget::gwt::cd                 # Alt-w (worktree -> cd)
 bindkey "^A"        beginning-of-line               # C-a
 bindkey "^E"        end-of-line                     # C-e
 bindkey '^B'        backward-char
