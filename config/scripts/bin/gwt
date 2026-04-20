@@ -1,0 +1,83 @@
+#!/bin/bash
+set -eu
+
+usage() {
+    echo "Usage: $(basename "$0") [-b] <branch-name>" >&2
+    echo "  -b    Use current branch as base (default: remote default branch)" >&2
+    exit 1
+}
+
+use_current_branch=false
+while getopts "b" opt; do
+    case $opt in
+        b) use_current_branch=true ;;
+        *) usage ;;
+    esac
+done
+shift $((OPTIND - 1))
+[ $# -eq 1 ] || usage
+branch="$1"
+
+if [ "$use_current_branch" = true ]; then
+    base_ref=$(git symbolic-ref --short HEAD 2>/dev/null || git rev-parse --short HEAD)
+elif ! git remote | grep -q .; then
+    if git show-ref --verify --quiet refs/heads/main; then
+        base_ref="main"
+    elif git show-ref --verify --quiet refs/heads/master; then
+        base_ref="master"
+    else
+        base_ref=$(git symbolic-ref --short HEAD 2>/dev/null || git rev-parse --short HEAD)
+    fi
+else
+    git fetch --prune origin
+
+    default_branch=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null \
+        | sed 's@^refs/remotes/origin/@@' || true)
+    default_branch="${default_branch:-main}"
+
+    remote_ref="origin/$default_branch"
+    remote_ts=$(git log -1 --format=%ct "$remote_ref" 2>/dev/null || echo 0)
+
+    if git show-ref --verify --quiet "refs/heads/$default_branch"; then
+        local_ts=$(git log -1 --format=%ct "$default_branch" 2>/dev/null || echo 0)
+        if [ "$local_ts" -gt "$remote_ts" ]; then
+            base_ref="$default_branch"
+        else
+            base_ref="$remote_ref"
+        fi
+    else
+        base_ref="$remote_ref"
+    fi
+fi
+
+git_common_dir="$(git rev-parse --git-common-dir)"
+[[ "$git_common_dir" = /* ]] || git_common_dir="$PWD/$git_common_dir"
+dir="$git_common_dir/.worktree/$branch"
+repo_root=$(git rev-parse --show-toplevel)
+
+if [ -d "$dir" ]; then
+    echo "$dir"
+    exit 0
+fi
+
+if git show-ref --verify --quiet "refs/heads/$branch"; then
+    git worktree add "$dir" "$branch" >&2
+else
+    git worktree add -b "$branch" "$dir" "$base_ref" >&2
+fi
+
+files_to_link=( ".env" )
+dirs_to_copy=( "bin" )
+
+for file in "${files_to_link[@]}"; do
+    [ -f "$repo_root/$file" ] && ln -sf "$repo_root/$file" "$dir/$file"
+done
+
+for src_dir in "${dirs_to_copy[@]}"; do
+    if [ -d "$repo_root/$src_dir" ]; then
+        mkdir -p "$dir/$(dirname "$src_dir")"
+        cp -r "$repo_root/$src_dir" "$dir/$src_dir"
+    fi
+done
+
+echo "$dir"
