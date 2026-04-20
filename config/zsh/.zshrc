@@ -363,6 +363,15 @@ widget::gwt::remove() {
     branch="${session_name##*/}"
     [[ -n "$session_name" ]] && tmux has-session -t "=$session_name" 2>/dev/null && has_session=1
 
+    if (( has_session )) && [[ -n "$TMUX" ]]; then
+        local cur
+        cur=$(tmux display-message -p '#{session_name}' 2>/dev/null)
+        if [[ "$cur" == "$session_name" ]]; then
+            zle -M "current tmux session — use 'wt-rm-here' instead"
+            return
+        fi
+    fi
+
     print
     print "Worktree: $selected"
     [[ -n "$branch" ]] && print "Branch:   $branch"
@@ -400,6 +409,68 @@ widget::gwt::remove() {
     fi
 
     zle reset-prompt
+}
+
+# Remove the worktree for the current tmux session:
+# switch the client to another session, then kill the current session
+# and git-worktree-remove its directory.
+wt-rm-here() {
+    local force=0
+    [[ "${1:-}" == "-f" ]] && force=1
+
+    git rev-parse --show-toplevel >/dev/null 2>&1 || { echo "not in a git repo" >&2; return 1; }
+
+    local wt main_wt
+    wt=$(git rev-parse --show-toplevel)
+    main_wt=$(git worktree list | awk 'NR==1 {print $1}')
+    if [[ "$wt" == "$main_wt" ]]; then
+        echo "refusing to remove main worktree: $wt" >&2
+        return 1
+    fi
+
+    local session_name branch
+    session_name=$(_wt_session_name_for "$wt") || session_name=""
+    branch="${session_name##*/}"
+
+    echo "Worktree: $wt"
+    [[ -n "$branch" ]] && echo "Branch:   $branch"
+    if [[ -n "$session_name" ]] && tmux has-session -t "=$session_name" 2>/dev/null; then
+        echo "Session:  $session_name (current — will switch away and kill)"
+    else
+        echo "Session:  (none)"
+        session_name=""
+    fi
+
+    if (( ! force )); then
+        echo -n "Remove? [y/N] "
+        local ans; read -r ans
+        [[ "$ans" == "y" || "$ans" == "Y" ]] || { echo "cancelled"; return 1; }
+    fi
+
+    cd "$main_wt" || return 1
+
+    if ! git -C "$main_wt" worktree remove $( (( force )) && echo --force) "$wt"; then
+        echo "git worktree remove failed" >&2
+        return 1
+    fi
+
+    if [[ -n "$branch" ]]; then
+        if (( force )); then
+            git -C "$main_wt" branch -D "$branch" 2>/dev/null
+        else
+            git -C "$main_wt" branch -d "$branch" 2>/dev/null
+        fi
+    fi
+
+    if [[ -n "$session_name" ]] && [[ -n "$TMUX" ]]; then
+        local other
+        other=$(tmux list-sessions -F '#{session_name}' 2>/dev/null \
+            | grep -vx "$session_name" | head -n1)
+        if [[ -n "$other" ]]; then
+            tmux switch-client -t "$other"
+        fi
+        tmux kill-session -t "=$session_name" 2>/dev/null
+    fi
 }
 
 zle -N widget::history
