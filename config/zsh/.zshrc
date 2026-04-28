@@ -463,11 +463,16 @@ wt-rm-here() {
     fi
 
     if [[ -n "$session_name" ]] && [[ -n "$TMUX" ]]; then
-        local other
-        other=$(tmux list-sessions -F '#{session_name}' 2>/dev/null \
-            | grep -vx "$session_name" | head -n1)
-        if [[ -n "$other" ]]; then
-            tmux switch-client -t "$other"
+        local target main_session
+        main_session=$(_wt_session_name_for "$main_wt" 2>/dev/null)
+        if [[ -n "$main_session" ]] && tmux has-session -t "=$main_session" 2>/dev/null; then
+            target="$main_session"
+        else
+            target=$(tmux list-sessions -F '#{session_name}' 2>/dev/null \
+                | grep -vx "$session_name" | head -n1)
+        fi
+        if [[ -n "$target" ]]; then
+            tmux switch-client -t "=$target"
         fi
         tmux kill-session -t "=$session_name" 2>/dev/null
     fi
