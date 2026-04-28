@@ -258,7 +258,7 @@ gwt() {
 # Print tmux session name for a worktree dir: "<repo>/<branch>".
 _wt_session_name_for() {
     local dir="$1" prefix branch
-    prefix=$(basename "$(dirname "$(git -C "$dir" rev-parse --git-common-dir)")") || return 1
+    prefix=$(basename "$(dirname "$(git -C "$dir" rev-parse --path-format=absolute --git-common-dir)")") || return 1
     branch=$(git -C "$dir" rev-parse --abbrev-ref HEAD) || return 1
     printf '%s/%s\n' "$prefix" "$branch"
 }
@@ -275,7 +275,7 @@ wt-new() {
     dir=$(command gwt "$branch") || return
 
     local session_prefix session_name
-    session_prefix=$(basename "$(dirname "$(git -C "$dir" rev-parse --git-common-dir)")")
+    session_prefix=$(basename "$(dirname "$(git -C "$dir" rev-parse --path-format=absolute --git-common-dir)")")
     session_name="$session_prefix/$branch"
 
     if [[ -n "$TMUX" ]]; then
