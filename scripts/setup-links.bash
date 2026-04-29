@@ -23,3 +23,12 @@ ln -sfv "$XDG_CONFIG_HOME/zsh/.zshenv" "$HOME/.zshenv"
 ln -sfv "$XDG_CONFIG_HOME/editorconfig/.editorconfig" "$HOME/.editorconfig"
 ln -sfnv "$XDG_CONFIG_HOME/vim" "$HOME/.vim"
 ln -sfnv "$XDG_CONFIG_HOME/emacs" "$HOME/.emacs.d"
+
+# Claude Code: link individual files so runtime data under ~/.claude is preserved.
+mkdir -p "$HOME/.claude"
+ln -sfv "$REPO_DIR/config/claude/settings.json" "$HOME/.claude/settings.json"
+ln -sfv "$REPO_DIR/config/claude/CLAUDE.md" "$HOME/.claude/CLAUDE.md"
+if [ -d "$HOME/.claude/commands" ] && [ ! -L "$HOME/.claude/commands" ]; then
+    rm -rf "$HOME/.claude/commands"
+fi
+ln -sfnv "$REPO_DIR/config/claude/commands" "$HOME/.claude/commands"
