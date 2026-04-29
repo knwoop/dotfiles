@@ -17,18 +17,19 @@ local function launch(app)
   return function() hs.application.launchOrFocus('/Applications/' .. app .. '.app') end
 end
 
-local function launchChromeProfile(profileDir, profileName)
+local function launchChromeProfile(profileDir, titleSuffix)
   return function()
     -- macOS' open ignores --profile-directory once Chrome is running, so we
-    -- enumerate Chrome windows and focus one whose title ends with
-    -- " - Google Chrome - <profile>", which Chrome appends automatically
-    -- when multiple profiles are active.
-    local marker = ' - Google Chrome - ' .. profileName
+    -- find an existing window for this profile ourselves. Chrome always
+    -- appends " - Google Chrome - <profile suffix>" to its window titles
+    -- when multiple profiles are active; that suffix is set by Chrome and
+    -- can't be spoofed by page or tab content, so an end-of-title match
+    -- is the most reliable signal we have.
     local chrome = hs.application.find('Google Chrome')
     if chrome then
       for _, win in ipairs(chrome:allWindows()) do
         local title = win:title() or ''
-        if #title >= #marker and title:sub(-#marker) == marker then
+        if #title >= #titleSuffix and title:sub(-#titleSuffix) == titleSuffix then
           win:focus()
           return
         end
@@ -49,8 +50,8 @@ end
 -- shortcuts
 -- remapRepeat({'cmd'}, 'Y', keyStroke({'cmd', 'shift'}, 'Z'))
 remap({ 'cmd', 'ctrl' }, 't', launch('Ghostty'))
-remap({ 'cmd', 'ctrl' }, 'c', launchChromeProfile('Profile 1', 'kauche'))
-remap({ 'cmd', 'ctrl' }, 'p', launchChromeProfile('Profile 5', 'kenta'))
+remap({ 'cmd', 'ctrl' }, 'c', launchChromeProfile('Profile 1', '(kauche)'))
+remap({ 'cmd', 'ctrl' }, 'p', launchChromeProfile('Profile 5', '(personal)'))
 remap({ 'cmd', 'ctrl' }, 's', launch('Slack'))
 
 deleteEvent = hs.eventtap.event.newKeyEvent({}, "delete", true)
