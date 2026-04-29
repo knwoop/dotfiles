@@ -29,7 +29,6 @@ end
 -- remapRepeat({'cmd'}, 'Y', keyStroke({'cmd', 'shift'}, 'Z'))
 remap({ 'cmd', 'ctrl' }, 't', launch('kitty'))
 remap({ 'cmd', 'ctrl' }, 'v', launch('Visual Studio Code'))
-remap({ 'cmd', 'ctrl' }, 'e', launch('Sublime Text'))
 remap({ 'cmd', 'ctrl' }, 'c', launch('Google Chrome'))
 
 deleteEvent = hs.eventtap.event.newKeyEvent({}, "delete", true)
