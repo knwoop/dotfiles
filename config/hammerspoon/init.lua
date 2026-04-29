@@ -17,24 +17,38 @@ local function launch(app)
   return function() hs.application.launchOrFocus('/Applications/' .. app .. '.app') end
 end
 
-local function launchChromeProfile(profile)
+local function axTreeContains(element, needle, depth)
+  if not element or depth > 6 then return false end
+  local desc = element:attributeValue('AXDescription') or ''
+  local title = element:attributeValue('AXTitle') or ''
+  local value = element:attributeValue('AXValue') or ''
+  if type(value) ~= 'string' then value = '' end
+  if desc:find(needle, 1, true) or title:find(needle, 1, true) or value:find(needle, 1, true) then
+    return true
+  end
+  local children = element:attributeValue('AXChildren') or {}
+  for _, child in ipairs(children) do
+    if axTreeContains(child, needle, depth + 1) then return true end
+  end
+  return false
+end
+
+local function launchChromeProfile(profileDir, profileName)
   return function()
-    -- Find an existing window for this profile and focus it. macOS' open -a
-    -- ignores --profile-directory once Chrome is running, so we have to
-    -- enumerate windows ourselves; --profile-directory only works at launch.
+    -- macOS' open ignores --profile-directory once Chrome is running, so we
+    -- enumerate Chrome windows and focus one whose AX tree advertises the
+    -- profile (the avatar button usually carries the profile name).
     local chrome = hs.application.find('Google Chrome')
     if chrome then
       for _, win in ipairs(chrome:allWindows()) do
-        local ax = hs.axuielement.windowElement(win)
-        local axTitle = ax and (ax:attributeValue('AXTitle') or '') or ''
-        if axTitle:find(profile, 1, true) or (win:title() or ''):find(profile, 1, true) then
+        local axWin = hs.axuielement.windowElement(win)
+        if axWin and axTreeContains(axWin, profileName, 0) then
           win:focus()
           return
         end
       end
     end
-    -- Fall back to launching a new window for the profile.
-    hs.execute("open -na 'Google Chrome' --args --profile-directory='" .. profile .. "'")
+    hs.execute("open -na 'Google Chrome' --args --profile-directory='" .. profileDir .. "'")
   end
 end
 
@@ -49,8 +63,8 @@ end
 -- shortcuts
 -- remapRepeat({'cmd'}, 'Y', keyStroke({'cmd', 'shift'}, 'Z'))
 remap({ 'cmd', 'ctrl' }, 't', launch('Ghostty'))
-remap({ 'cmd', 'ctrl' }, 'c', launchChromeProfile('Profile 1'))
-remap({ 'cmd', 'ctrl' }, 'p', launchChromeProfile('Profile 5'))
+remap({ 'cmd', 'ctrl' }, 'c', launchChromeProfile('Profile 1', 'kauche'))
+remap({ 'cmd', 'ctrl' }, 'p', launchChromeProfile('Profile 5', 'kenta'))
 remap({ 'cmd', 'ctrl' }, 's', launch('Slack'))
 
 deleteEvent = hs.eventtap.event.newKeyEvent({}, "delete", true)
