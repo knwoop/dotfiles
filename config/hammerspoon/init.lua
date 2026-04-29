@@ -19,7 +19,22 @@ end
 
 local function launchChromeProfile(profile)
   return function()
-    hs.execute("open -a 'Google Chrome' --args --profile-directory='" .. profile .. "'")
+    -- Find an existing window for this profile and focus it. macOS' open -a
+    -- ignores --profile-directory once Chrome is running, so we have to
+    -- enumerate windows ourselves; --profile-directory only works at launch.
+    local chrome = hs.application.find('Google Chrome')
+    if chrome then
+      for _, win in ipairs(chrome:allWindows()) do
+        local ax = hs.axuielement.windowElement(win)
+        local axTitle = ax and (ax:attributeValue('AXTitle') or '') or ''
+        if axTitle:find(profile, 1, true) or (win:title() or ''):find(profile, 1, true) then
+          win:focus()
+          return
+        end
+      end
+    end
+    -- Fall back to launching a new window for the profile.
+    hs.execute("open -na 'Google Chrome' --args --profile-directory='" .. profile .. "'")
   end
 end
 
