@@ -19,7 +19,7 @@ end
 
 local function launchChromeProfile(profile)
   return function()
-    hs.execute("open -na 'Google Chrome' --args --profile-directory='" .. profile .. "'")
+    hs.execute("open -a 'Google Chrome' --args --profile-directory='" .. profile .. "'")
   end
 end
 
