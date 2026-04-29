@@ -17,6 +17,12 @@ local function launch(app)
   return function() hs.application.launchOrFocus('/Applications/' .. app .. '.app') end
 end
 
+local function launchChromeProfile(profile)
+  return function()
+    hs.execute("open -na 'Google Chrome' --args --profile-directory='" .. profile .. "'")
+  end
+end
+
 local function remap(mod, key, pressedFn, repeatFn)
   hs.hotkey.bind(mod, key, pressedFn, nil, repeatFn)
 end
@@ -28,7 +34,8 @@ end
 -- shortcuts
 -- remapRepeat({'cmd'}, 'Y', keyStroke({'cmd', 'shift'}, 'Z'))
 remap({ 'cmd', 'ctrl' }, 't', launch('Ghostty'))
-remap({ 'cmd', 'ctrl' }, 'c', launch('Google Chrome'))
+remap({ 'cmd', 'ctrl' }, 'c', launchChromeProfile('Profile 1'))
+remap({ 'cmd', 'ctrl' }, 'p', launchChromeProfile('Profile 5'))
 remap({ 'cmd', 'ctrl' }, 's', launch('Slack'))
 
 deleteEvent = hs.eventtap.event.newKeyEvent({}, "delete", true)
