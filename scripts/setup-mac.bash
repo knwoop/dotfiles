@@ -20,6 +20,7 @@ defaults write com.apple.finder AppleShowAllFiles -bool true
 defaults write com.apple.finder ShowPathbar -bool true
 defaults write com.apple.finder ShowTabView -bool true
 defaults write com.apple.finder NewWindowTarget -string PfHm
+defaults write com.apple.finder QuitMenuItem -bool true
 
 # Keyboard
 defaults write NSGlobalDomain AppleKeyboardUIMode -int 3
@@ -42,6 +43,7 @@ defaults write com.apple.dock autohide-time-modifier -float 0.4
 defaults write com.apple.dock tilesize -int 16
 defaults write com.apple.dock magnification -bool false
 defaults write com.apple.dock show-recents -bool false
+defaults write com.apple.dock minimize-to-application -bool true
 defaults write com.apple.dock static-only -bool true
 
 # Clear all pinned apps in the Dock; combined with static-only the Dock only
