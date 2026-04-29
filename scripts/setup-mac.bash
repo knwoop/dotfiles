@@ -42,7 +42,15 @@ defaults write com.apple.dock autohide-time-modifier -float 0.4
 defaults write com.apple.dock tilesize -int 16
 defaults write com.apple.dock magnification -bool false
 defaults write com.apple.dock show-recents -bool false
-defaults write com.apple.dock static-only -bool true; killall Dock
+defaults write com.apple.dock static-only -bool true
+
+# Clear all pinned apps in the Dock; combined with static-only the Dock only
+# shows currently running apps.
+if type dockutil >/dev/null 2>&1; then
+    dockutil --remove all --no-restart || true
+fi
+
+killall Dock
 
 # Menubar
 defaults write NSGlobalDomain _HIHideMenuBar -bool true
