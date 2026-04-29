@@ -17,18 +17,25 @@ local function launch(app)
   return function() hs.application.launchOrFocus('/Applications/' .. app .. '.app') end
 end
 
-local function axTreeContains(element, needle, depth)
-  if not element or depth > 6 then return false end
-  local desc = element:attributeValue('AXDescription') or ''
-  local title = element:attributeValue('AXTitle') or ''
-  local value = element:attributeValue('AXValue') or ''
-  if type(value) ~= 'string' then value = '' end
-  if desc:find(needle, 1, true) or title:find(needle, 1, true) or value:find(needle, 1, true) then
+local function findToolbar(element, depth)
+  if not element or depth > 4 then return nil end
+  if element:attributeValue('AXRole') == 'AXToolbar' then return element end
+  for _, child in ipairs(element:attributeValue('AXChildren') or {}) do
+    local found = findToolbar(child, depth + 1)
+    if found then return found end
+  end
+  return nil
+end
+
+local function toolbarMentions(toolbar, needle, depth)
+  if not toolbar or depth > 4 then return false end
+  local desc = toolbar:attributeValue('AXDescription') or ''
+  local title = toolbar:attributeValue('AXTitle') or ''
+  if desc:find(needle, 1, true) or title:find(needle, 1, true) then
     return true
   end
-  local children = element:attributeValue('AXChildren') or {}
-  for _, child in ipairs(children) do
-    if axTreeContains(child, needle, depth + 1) then return true end
+  for _, child in ipairs(toolbar:attributeValue('AXChildren') or {}) do
+    if toolbarMentions(child, needle, depth + 1) then return true end
   end
   return false
 end
@@ -36,13 +43,15 @@ end
 local function launchChromeProfile(profileDir, profileName)
   return function()
     -- macOS' open ignores --profile-directory once Chrome is running, so we
-    -- enumerate Chrome windows and focus one whose AX tree advertises the
-    -- profile (the avatar button usually carries the profile name).
+    -- enumerate Chrome windows and focus one whose toolbar advertises the
+    -- profile name (the avatar button is in the toolbar). Restricting the
+    -- search to the toolbar avoids false matches from tab/bookmark titles.
     local chrome = hs.application.find('Google Chrome')
     if chrome then
       for _, win in ipairs(chrome:allWindows()) do
         local axWin = hs.axuielement.windowElement(win)
-        if axWin and axTreeContains(axWin, profileName, 0) then
+        local toolbar = axWin and findToolbar(axWin, 0)
+        if toolbar and toolbarMentions(toolbar, profileName, 0) then
           win:focus()
           return
         end
