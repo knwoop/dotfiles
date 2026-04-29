@@ -75,3 +75,13 @@ defaults write org.hammerspoon.Hammerspoon MJConfigFile "$XDG_CONFIG_HOME/hammer
 killall Dock
 killall Finder
 killall SystemUIServer
+
+# LaunchAgents
+mkdir -p "$HOME/Library/LaunchAgents"
+for plist in "$REPO_DIR/config/launchagents/"*.plist; do
+    [ -f "$plist" ] || continue
+    target="$HOME/Library/LaunchAgents/$(basename "$plist")"
+    ln -sfv "$plist" "$target"
+    launchctl unload "$target" 2>/dev/null || true
+    launchctl load "$target"
+done
