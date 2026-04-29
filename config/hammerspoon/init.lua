@@ -17,41 +17,18 @@ local function launch(app)
   return function() hs.application.launchOrFocus('/Applications/' .. app .. '.app') end
 end
 
-local function findToolbar(element, depth)
-  if not element or depth > 4 then return nil end
-  if element:attributeValue('AXRole') == 'AXToolbar' then return element end
-  for _, child in ipairs(element:attributeValue('AXChildren') or {}) do
-    local found = findToolbar(child, depth + 1)
-    if found then return found end
-  end
-  return nil
-end
-
-local function toolbarMentions(toolbar, needle, depth)
-  if not toolbar or depth > 4 then return false end
-  local desc = toolbar:attributeValue('AXDescription') or ''
-  local title = toolbar:attributeValue('AXTitle') or ''
-  if desc:find(needle, 1, true) or title:find(needle, 1, true) then
-    return true
-  end
-  for _, child in ipairs(toolbar:attributeValue('AXChildren') or {}) do
-    if toolbarMentions(child, needle, depth + 1) then return true end
-  end
-  return false
-end
-
 local function launchChromeProfile(profileDir, profileName)
   return function()
     -- macOS' open ignores --profile-directory once Chrome is running, so we
-    -- enumerate Chrome windows and focus one whose toolbar advertises the
-    -- profile name (the avatar button is in the toolbar). Restricting the
-    -- search to the toolbar avoids false matches from tab/bookmark titles.
+    -- enumerate Chrome windows and focus one whose title ends with
+    -- " - Google Chrome - <profile>", which Chrome appends automatically
+    -- when multiple profiles are active.
+    local marker = ' - Google Chrome - ' .. profileName
     local chrome = hs.application.find('Google Chrome')
     if chrome then
       for _, win in ipairs(chrome:allWindows()) do
-        local axWin = hs.axuielement.windowElement(win)
-        local toolbar = axWin and findToolbar(axWin, 0)
-        if toolbar and toolbarMentions(toolbar, profileName, 0) then
+        local title = win:title() or ''
+        if #title >= #marker and title:sub(-#marker) == marker then
           win:focus()
           return
         end
