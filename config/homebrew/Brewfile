@@ -42,7 +42,6 @@ brew "yq"
 
 cask "alacritty"
 cask "gcloud-cli"
-cask "bitwarden"
 cask "firefox"
 cask "font-jetbrains-mono-nerd-font"
 cask "font-sauce-code-pro-nerd-font"
