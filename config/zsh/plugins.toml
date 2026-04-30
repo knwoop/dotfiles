@@ -17,9 +17,10 @@ github = "romkatv/zsh-defer"
 apply = ["source"]
 profiles = ["eager"]
 
-[plugins.spaceship]
-github = "spaceship-prompt/spaceship-prompt"
-apply = ["source"]
+[plugins.starship]
+inline = """
+eval "$(starship init zsh)"
+"""
 profiles = ["eager"]
 
 [plugins.lazy]
@@ -95,6 +96,16 @@ profiles = ["lazy"]
 [plugins.compinit]
 inline = """
 autoload -Uz compinit
-zsh-defer -a -t0.01 compinit -d "$XDG_STATE_HOME/zcompdump"
+# Run a full security-checked compinit at most once a day and use the
+# cached zcompdump (-C) the rest of the time so new shells stay snappy.
+__compinit() {
+    local dump="$XDG_STATE_HOME/zcompdump"
+    if [[ -n "$dump"(#qN.mh-24) ]]; then
+        compinit -C -d "$dump"
+    else
+        compinit -d "$dump"
+    fi
+}
+zsh-defer -a -t0.01 __compinit
 """
 profiles = ["lazy"]

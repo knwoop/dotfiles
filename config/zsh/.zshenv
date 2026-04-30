@@ -44,9 +44,6 @@ export SHELDON_CONFIG_DIR="$ZDOTDIR"
 export GHRED_CONFIG_HOME="$XDG_CONFIG_HOME/gh-red"
 export GHRED_DATA_HOME="$XDG_DATA_HOME/gh-red"
 
-### spaceship ###
-export SPACESHIP_CONFIG="$ZDOTDIR/spaceshiprc.zsh"
-
 ### mise ###
 export MISE_CONFIG_DIR="$XDG_CONFIG_HOME/mise"
 export MISE_DATA_DIR="$XDG_DATA_HOME/mise"
