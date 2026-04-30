@@ -76,43 +76,12 @@ zle -N replace_multiple_dots replace_multiple_dots_exclude_go
 """
 profiles = ["lazy"]
 
-[plugins.zeno]
-github = "yuki-yano/zeno.zsh"
-hooks.pre = """
-export ZENO_HOME="$(mktemp -d -t zeno.XXXXXX)"
-export ZENO_CONFIG_HOME="$XDG_CONFIG_HOME/zeno"
-export ZENO_SCRIPT_DIR="$ZENO_CONFIG_HOME/scripts"
-export ZENO_ENABLE_SOCK=1
-# export ZENO_DISABLE_BUILTIN_COMPLETION=1
-export ZENO_GIT_CAT="bat --color=always"
-export ZENO_GIT_TREE="eza --tree"
-
-zsh-defer -a -t0.01 "$ZENO_CONFIG_HOME/config.ts"
-"""
-hooks.post = """
-__zeno_bindkey() {
-    bindkey ' '  zeno-auto-snippet
-    bindkey '^M' zeno-auto-snippet-and-accept-line
-    bindkey '^P' zeno-completion
-    bindkey '^X '  zeno-insert-space
-    bindkey '^X^M' accept-line
-}
-zsh-defer -a -t0.01 __zeno_bindkey
-
-__zeno_chpwd() {
-    "$ZENO_CONFIG_HOME/config.ts"
-    zeno-restart-server
-}
-add-zsh-hook chpwd __zeno_chpwd
-"""
-profiles = ["lazy"]
-
 [plugins.direnv]
 local = "~/.local/share/gh-red/packages/github.com/direnv/direnv"
 profiles = ["lazy"]
 
 [plugins.zsh-autopair]
-github = "hlissner/zsh-autopair" # read after zeno
+github = "hlissner/zsh-autopair"
 profiles = ["lazy"]
 
 # programs
