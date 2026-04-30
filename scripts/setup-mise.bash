@@ -12,9 +12,3 @@ fi
 
 echo "Installing mise tools..."
 mise install
-
-GOTIP_BIN="$HOME/.local/share/mise/shims/gotip"
-if [ -x "$GOTIP_BIN" ] && [ ! -x "$HOME/sdk/gotip/bin/go" ]; then
-    echo "Downloading and building Go master via gotip (takes several minutes)..."
-    "$GOTIP_BIN" download
-fi
