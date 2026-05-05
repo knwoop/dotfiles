@@ -3,5 +3,5 @@
 ## Installation
 
 ```shell
-$ curl -sL https://knwoop.github.io/dotfiles/install.sh | sh
+$ curl -sL https://raw.githubusercontent.com/knwoop/dotfiles/main/install.sh | sh
 ```
