@@ -119,9 +119,11 @@ export default defineConfig({
     },
     {
       name: "denisidoro/navi",
+      enabled: Deno.build.os !== "darwin",
     },
     {
       name: "dbrgn/tealdeer",
+      enabled: Deno.build.os !== "darwin",
       rename: [
         { from: "tealdeer*", to: "tldr" },
       ],
@@ -158,6 +160,7 @@ export default defineConfig({
     },
     {
       name: "XAMPPRocky/tokei",
+      enabled: Deno.build.os !== "darwin",
     },
     {
       name: "neovim/neovim",
