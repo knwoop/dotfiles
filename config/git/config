@@ -7,4 +7,5 @@
     path = conf.d/ghq.conf
     path = conf.d/gist.conf
     path = conf.d/github.conf
+    path = conf.d/signing.conf
     path = conf.d/local.conf
