@@ -64,6 +64,12 @@ defaults write com.apple.controlcenter "NSStatusItem Visible Sound" -bool false
 defaults write com.apple.controlcenter "NSStatusItem Visible FocusModes" -bool false
 defaults write com.apple.controlcenter "NSStatusItem Visible ScreenMirroring" -bool false
 
+# Disable Spotlight keyboard shortcuts so Raycast can take over Cmd+Space
+# 64 = Show Spotlight search (Cmd+Space)
+# 65 = Show Finder search window (Cmd+Option+Space)
+defaults write com.apple.symbolichotkeys AppleSymbolicHotKeys -dict-add 64 "{enabled = 0; value = { parameters = (65535, 49, 1048576); type = 'standard'; }; }"
+defaults write com.apple.symbolichotkeys AppleSymbolicHotKeys -dict-add 65 "{enabled = 0; value = { parameters = (65535, 49, 1572864); type = 'standard'; }; }"
+
 # Mission Control
 defaults write com.apple.dock wvous-br-corner -int 4 # Bottom right -> Desktop
 defaults write com.apple.dock mru-spaces -bool false # Don't automatically rearrange spaces
