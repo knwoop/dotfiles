@@ -1,3 +1,5 @@
+# Add deno completions to search path
+if [[ ":$FPATH:" != *":/Users/kenta.takahashi/.config/zsh/completions:"* ]]; then export FPATH="/Users/kenta.takahashi/.config/zsh/completions:$FPATH"; fi
 ### paths ###
 typeset -gU PATH path
 typeset -gU FPATH fpath
@@ -533,3 +535,8 @@ sheldon::load eager
 if [ -f '/opt/homebrew/share/google-cloud-sdk/path.zsh.inc' ]; then . '/opt/homebrew/share/google-cloud-sdk/path.zsh.inc'; fi
 if [ -f '/opt/homebrew/share/google-cloud-sdk/completion.zsh.inc' ]; then . '/opt/homebrew/share/google-cloud-sdk/completion.zsh.inc'; fi
 
+. "/Users/kenta.takahashi/.local/share/deno/env"
+# Initialize zsh completions (added by deno install script)
+autoload -Uz compinit
+compinit
+export PATH="$HOME/.local/bin:$PATH"
