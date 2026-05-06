@@ -132,6 +132,7 @@
   },
   "alwaysThinkingEnabled": true,
   "effortLevel": "high",
-  "skipAutoPermissionPrompt": true,
-  "editorMode": "vim"
+  "theme": "auto",
+  "editorMode": "vim",
+  "skipAutoPermissionPrompt": true
 }
