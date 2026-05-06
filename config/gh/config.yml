@@ -13,3 +13,4 @@ aliases:
     open: repo view --web
     remote: '!gh repo view --json="sshUrl" --jq=".sshUrl" "$(basename "$(git rev-parse --show-toplevel)")"'
     add-remote: '!git remote add origin "$(gh remote)" && git remote show origin'
+version: "1"
