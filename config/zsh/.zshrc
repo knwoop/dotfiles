@@ -216,7 +216,7 @@ widget::ghq::source() {
 }
 widget::ghq::select() {
     local root="$(ghq root)"
-    widget::ghq::source | fzf --exit-0 --preview="fzf-preview-git ${(q)root}/{+2}" --preview-window="right:60%" | cut -d' ' -f2-
+    widget::ghq::source | fzf --ansi --exit-0 --preview="fzf-preview-git ${(q)root}/{+2}" --preview-window="right:60%" | cut -d' ' -f2-
 }
 widget::ghq::dir() {
     local selected="$(widget::ghq::select)"
