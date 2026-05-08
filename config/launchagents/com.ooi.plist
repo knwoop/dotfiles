@@ -6,14 +6,12 @@
     <string>com.ooi</string>
     <key>ProgramArguments</key>
     <array>
-        <string>/Users/knwoop/.local/share/go/bin/ooi</string>
+        <string>/Users/kenta.takahashi/.local/share/mise/installs/go/1.26.2/bin/ooi</string>
     </array>
     <key>RunAtLoad</key>
     <true/>
     <key>KeepAlive</key>
     <true/>
-    <key>ThrottleInterval</key>
-    <integer>5</integer>
     <key>LimitLoadToSessionType</key>
     <string>Aqua</string>
     <key>StandardOutPath</key>
