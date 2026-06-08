@@ -44,6 +44,8 @@ go = "latest"
 "go:honnef.co/go/tools/cmd/staticcheck" = "latest"
 "go:mvdan.cc/gofumpt" = "latest"
 node = "25.6.1"
+"npm:@github/copilot-language-server" = "latest"
+"npm:hunkdiff" = "latest"
 "npm:typescript-language-server" = "latest"
 pnpm = "latest"
 python = "latest"
@@ -52,6 +54,7 @@ python = "latest"
 legacy_version_file = true
 idiomatic_version_file_enable_tools = ["node"]
 experimental = true
+trusted_config_paths = ["~/.local/share/ghq"]
 
 [settings.node]
 gpg_verify = false
