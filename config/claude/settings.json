@@ -114,7 +114,8 @@
     "clear-plan-skills@knwoop-clear-plan-skills": true,
     "telegram@claude-plugins-official": true,
     "figma@claude-plugins-official": true,
-    "rust-analyzer-lsp@claude-plugins-official": true
+    "rust-analyzer-lsp@claude-plugins-official": true,
+    "adamsreview@adamsreview": true
   },
   "extraKnownMarketplaces": {
     "knwoop-clear-plan-skills": {
@@ -127,6 +128,12 @@
       "source": {
         "source": "github",
         "repo": "anthropics/claude-plugins-official"
+      }
+    },
+    "adamsreview": {
+      "source": {
+        "source": "github",
+        "repo": "adamjgmiller/adamsreview"
       }
     }
   },
