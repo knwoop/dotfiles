@@ -52,7 +52,11 @@ fi
 
 git_common_dir="$(git rev-parse --git-common-dir)"
 [[ "$git_common_dir" = /* ]] || git_common_dir="$PWD/$git_common_dir"
-dir="$git_common_dir/.worktree/$branch"
+# Place worktrees under the repo root (.worktree/), not inside .git/. Deriving
+# the location from --git-common-dir keeps it stable when invoked from any
+# existing worktree, unlike --show-toplevel which would nest under the cwd.
+main_root="$(dirname "$git_common_dir")"
+dir="$main_root/.worktree/$branch"
 repo_root=$(git rev-parse --show-toplevel)
 
 if [ -d "$dir" ]; then

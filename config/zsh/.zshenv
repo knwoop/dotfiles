@@ -50,5 +50,8 @@ export MISE_DATA_DIR="$XDG_DATA_HOME/mise"
 export MISE_CACHE_DIR="$XDG_CACHE_HOME/mise"
 export PATH="$HOME/.local/share/mise/shims:$PATH"
 
+### aqua ###
+export PATH="${AQUA_ROOT_DIR:-$XDG_DATA_HOME/aquaproj-aqua}/bin:$PATH"
+
 # uv
 export PATH="/Users/knwoop/.local/share/../bin:$PATH"
