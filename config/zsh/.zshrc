@@ -257,13 +257,6 @@ gwt() {
     cd "$dir"
 }
 
-# Create a detached tmux session: shell on the left, claude on the right (focused).
-_wt_new_claude_session() {
-    local session_name="$1" dir="$2"
-    tmux new-session -d -s "$session_name" -c "$dir"
-    tmux split-window -h -t "=$session_name:" -c "$dir" claude
-}
-
 # Print tmux session name for a worktree dir: "<repo>/<branch>".
 _wt_session_name_for() {
     local dir="$1" prefix branch
@@ -287,13 +280,13 @@ wt-new() {
     session_prefix=$(basename "$(dirname "$(git -C "$dir" rev-parse --path-format=absolute --git-common-dir)")")
     session_name="$session_prefix/$branch"
 
-    _wt_new_claude_session "$session_name" "$dir"
     if [[ -n "$TMUX" ]]; then
+        tmux new-session -d -s "$session_name" -c "$dir" claude
         tmux switch-client -t "$session_name"
         return
     fi
 
-    tmux attach-session -t "=$session_name"
+    tmux new-session -s "$session_name" -c "$dir" claude
 }
 widget::wt::new() {
     BUFFER="wt-new"
@@ -317,7 +310,7 @@ widget::gwt::cd() {
 
     if [[ -n "$TMUX" ]]; then
         if ! tmux has-session -t "=$session_name" 2>/dev/null; then
-            _wt_new_claude_session "$session_name" "$selected"
+            tmux new-session -d -s "$session_name" -c "$selected" claude
         fi
         tmux switch-client -t "$session_name"
         zle -R -c
@@ -327,7 +320,7 @@ widget::gwt::cd() {
     if tmux has-session -t "=$session_name" 2>/dev/null; then
         BUFFER="tmux attach-session -t ${(q)session_name}"
     else
-        BUFFER="_wt_new_claude_session ${(q)session_name} ${(q)selected} && tmux attach-session -t =${(q)session_name}"
+        BUFFER="tmux new-session -s ${(q)session_name} -c ${(q)selected} claude"
     fi
     zle accept-line
     zle -R -c
