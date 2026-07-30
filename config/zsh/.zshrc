@@ -261,7 +261,7 @@ gwt() {
 _wt_new_claude_session() {
     local session_name="$1" dir="$2"
     tmux new-session -d -s "$session_name" -c "$dir"
-    tmux split-window -h -t "=$session_name" -c "$dir" claude
+    tmux split-window -h -t "=$session_name:" -c "$dir" claude
 }
 
 # Print tmux session name for a worktree dir: "<repo>/<branch>".
