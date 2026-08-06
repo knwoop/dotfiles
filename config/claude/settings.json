@@ -116,7 +116,8 @@
     "telegram@claude-plugins-official": true,
     "figma@claude-plugins-official": true,
     "rust-analyzer-lsp@claude-plugins-official": true,
-    "adamsreview@adamsreview": true
+    "adamsreview@adamsreview": true,
+    "freee-mcp@freee-mcp-marketplace": true
   },
   "extraKnownMarketplaces": {
     "knwoop-clear-plan-skills": {
@@ -135,6 +136,12 @@
       "source": {
         "source": "github",
         "repo": "adamjgmiller/adamsreview"
+      }
+    },
+    "freee-mcp-marketplace": {
+      "source": {
+        "source": "github",
+        "repo": "freee/freee-mcp"
       }
     }
   },
