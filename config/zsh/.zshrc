@@ -300,6 +300,59 @@ widget::wt::new() {
     zle accept-line
     zle -R -c
 }
+
+# Slugify an issue title for branch/session names. ASCII only: non-ASCII in a
+# branch name makes GitHub flag the PR head ref ("hidden characters") and the
+# worktree dir inherits it. Japanese-only titles slug to empty → branch is the
+# bare issue id.
+_bd_slugify() {
+    local s="$1"
+    s=${s//[^[:ascii:]]/}
+    s=${s//[^[:alnum:]]/-}
+    s=${(L)s}
+    while [[ "$s" == *--* ]]; do s=${s//--/-}; done
+    s=${s#-}; s=${s%-}
+    print -r -- "${s[1,40]}"
+}
+
+# Start a worktree + claude tmux session from a beads issue.
+# Session name: "<repo>/<issue-id>-<title-slug>" so it's readable in the session list.
+bd-dev() {
+    git rev-parse --show-toplevel >/dev/null 2>&1 || { echo "Not in a git repo"; return 1; }
+
+    local id title
+    if [[ -n "$1" ]]; then
+        id="$1"
+        title=$(bd show "$id" --json | jq -r '.[0].title') || return
+    else
+        local line
+        line=$(bd list --json --status open,in_progress \
+            | jq -r '.[] | "\(.id)\t\(.title)"' \
+            | fzf --prompt="beads issue> ") || return
+        [[ -z "$line" ]] && return
+        id=${line%%$'\t'*}
+        title=${line#*$'\t'}
+    fi
+
+    local slug branch
+    slug=$(_bd_slugify "$title")
+    branch="$id${slug:+-$slug}"
+
+    local dir
+    dir=$(command gwt "$branch") || return
+
+    local session_name
+    session_name=$(_wt_session_name_for "$dir") || return
+
+    _wt_new_claude_session "$session_name" "$dir"
+    bd update "$id" --status in_progress >/dev/null
+
+    if [[ -n "$TMUX" ]]; then
+        tmux switch-client -t "=$session_name"
+        return
+    fi
+    tmux attach-session -t "=$session_name"
+}
 widget::gwt::cd() {
     git rev-parse --show-toplevel >/dev/null 2>&1 || { zle -M "not in a git repo"; return; }
     local selected
