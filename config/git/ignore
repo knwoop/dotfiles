@@ -53,3 +53,6 @@ e2e_coverage.out
 
 ### beads ###
 .beads/
+
+### git worktree (gwt) ###
+.worktree/
