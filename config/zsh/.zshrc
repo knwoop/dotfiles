@@ -336,7 +336,8 @@ bd-dev() {
 
     local slug branch
     slug=$(_bd_slugify "$title")
-    branch="$id${slug:+-$slug}"
+    # -plan suffix: this is the plan worktree; /bd-go cuts the matching -work one
+    branch="$id${slug:+-$slug}-plan"
 
     local dir
     dir=$(command gwt "$branch") || return
