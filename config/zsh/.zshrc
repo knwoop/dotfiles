@@ -264,25 +264,32 @@ _wt_new_claude_session() {
     tmux split-window -h -t "=$session_name:" -c "$dir" claude
 }
 
-# Drop the "<repo>-<issue-hash>-" prefix a beads branch carries so the session
-# list stays readable: "kauche-app/kauche-app-5ld7-farm-storybook-stories-plan"
-# becomes "kauche-app/farm-storybook-stories-plan". Only the session label is
-# shortened; the branch keeps its full name.
+# A beads branch is "<repo>-<hash>-<slug>", so "<repo>/<branch>" says the repo
+# name twice. Drop the repeated prefix but keep the hash, which is what makes
+# the label unique: "kauche-app/kauche-app-5ld7-farm-storybook-stories-plan"
+# becomes "kauche-app/5ld7-farm-storybook-stories-plan". The branch itself is
+# untouched — bd-plan and bd-go still read the issue id off it.
 _wt_short_branch() {
-    local repo="$1" branch="$2" rest
-    if [[ "$branch" == "$repo"-* ]]; then
-        rest=${branch#"$repo"-}
-        [[ "$rest" == *-* ]] && branch=${rest#*-}
-    fi
+    local repo="$1" branch="$2"
+    [[ "$branch" == "$repo"-* ]] && branch=${branch#"$repo"-}
     print -r -- "$branch"
 }
 
 # Print tmux session name for a worktree dir: "<repo>/<short branch>".
 _wt_session_name_for() {
-    local dir="$1" prefix branch
-    prefix=$(basename "$(dirname "$(git -C "$dir" rev-parse --path-format=absolute --git-common-dir)")") || return 1
-    branch=$(git -C "$dir" rev-parse --abbrev-ref HEAD) || return 1
-    printf '%s/%s\n' "$prefix" "$(_wt_short_branch "$prefix" "$branch")"
+    local dir="$1" main_root prefix top label
+    main_root=$(dirname "$(git -C "$dir" rev-parse --path-format=absolute --git-common-dir)") || return 1
+    prefix=$(basename "$main_root")
+    top=$(git -C "$dir" rev-parse --show-toplevel) || return 1
+    if [[ "$top" == "$main_root/.worktree/"* ]]; then
+        # Name it after the directory gwt cut, not after HEAD: a -work worktree
+        # checks out a different child branch per PR, and the session has to keep
+        # the name it was created with or wt-cd will open a second one.
+        label=${top#"$main_root/.worktree/"}
+    else
+        label=$(git -C "$dir" rev-parse --abbrev-ref HEAD) || return 1
+    fi
+    printf '%s/%s\n' "$prefix" "$(_wt_short_branch "$prefix" "$label")"
 }
 
 wt-new() {
