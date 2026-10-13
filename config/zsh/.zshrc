@@ -365,7 +365,18 @@ bd-dev() {
     session_name=$(_wt_session_name_for "$dir") || return
 
     _wt_new_claude_session "$session_name" "$dir"
-    bd update "$id" --status in_progress >/dev/null
+
+    # Record where this epic lives so anything outside the shell (Emacs, an
+    # agent) can go issue -> worktree without re-deriving the naming convention.
+    # The path is relative to the main repo root on purpose: .beads/config.yaml
+    # carries a sync.remote, so issue data leaves this machine and must not
+    # contain $HOME or a username.
+    local main_root rel
+    main_root=$(dirname "$(git -C "$dir" rev-parse --path-format=absolute --git-common-dir)")
+    rel=${dir#"$main_root"/}
+    bd update "$id" --status in_progress \
+        --set-metadata "plan_worktree=$rel" \
+        --set-metadata "plan_session=$session_name" >/dev/null
 
     if [[ -n "$TMUX" ]]; then
         tmux switch-client -t "=$session_name"

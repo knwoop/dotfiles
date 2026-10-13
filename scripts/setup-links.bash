@@ -33,3 +33,11 @@ if [ -d "$HOME/.claude/commands" ] && [ ! -L "$HOME/.claude/commands" ]; then
     rm -rf "$HOME/.claude/commands"
 fi
 ln -sfnv "$REPO_DIR/config/claude/commands" "$HOME/.claude/commands"
+
+# Skills are linked one by one: ~/.claude/skills also holds externally installed
+# skills (and the synced/ bucket), so the directory itself must stay real.
+mkdir -p "$HOME/.claude/skills"
+for skill in "$REPO_DIR"/config/claude/skills/*/; do
+    [ -d "$skill" ] || continue
+    ln -sfnv "${skill%/}" "$HOME/.claude/skills/$(basename "$skill")"
+done
