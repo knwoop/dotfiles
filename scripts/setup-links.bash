@@ -38,10 +38,29 @@ ln -sfnv "$REPO_DIR/config/claude/commands" "$HOME/.claude/commands"
 # the same SKILL.md is linked into the vendor-neutral ~/.agents/skills and into
 # ~/.claude/skills. Both directories stay real — they also hold skills installed
 # from elsewhere (and Claude's synced/ bucket), so they cannot be linked wholesale.
+# A skill installed by some other tool lands as a real directory. `ln -sfn` onto
+# one does not replace it — it silently creates the link INSIDE it
+# (skills/ship/ship -> ...), which loads nothing and hides the repo version. So
+# move anything that is not already a symlink out of the way first.
+link_skill() {
+    src="$1"
+    dst="$2"
+    if [ -e "$dst" ] && [ ! -L "$dst" ]; then
+        # Park it outside the skills directory. A copy left alongside would be
+        # picked up as a second skill, under the backup directory's name.
+        backup_dir="$XDG_STATE_HOME/dotfiles/skills-replaced"
+        mkdir -p "$backup_dir"
+        backup="$backup_dir/$(basename "$dst")-$(date +%Y%m%d%H%M%S)"
+        echo "warning: $dst was installed outside dotfiles; moved to $backup" >&2
+        mv "$dst" "$backup"
+    fi
+    ln -sfnv "$src" "$dst"
+}
+
 mkdir -p "$HOME/.agents/skills" "$HOME/.claude/skills"
 for skill in "$REPO_DIR"/config/agents/skills/*/; do
     [ -d "$skill" ] || continue
     name=$(basename "$skill")
-    ln -sfnv "${skill%/}" "$HOME/.agents/skills/$name"
-    ln -sfnv "${skill%/}" "$HOME/.claude/skills/$name"
+    link_skill "${skill%/}" "$HOME/.agents/skills/$name"
+    link_skill "${skill%/}" "$HOME/.claude/skills/$name"
 done
