@@ -34,10 +34,14 @@ if [ -d "$HOME/.claude/commands" ] && [ ! -L "$HOME/.claude/commands" ]; then
 fi
 ln -sfnv "$REPO_DIR/config/claude/commands" "$HOME/.claude/commands"
 
-# Skills are linked one by one: ~/.claude/skills also holds externally installed
-# skills (and the synced/ bucket), so the directory itself must stay real.
-mkdir -p "$HOME/.claude/skills"
-for skill in "$REPO_DIR"/config/claude/skills/*/; do
+# Skills live under config/agents/ because nothing in them is Claude-specific:
+# the same SKILL.md is linked into the vendor-neutral ~/.agents/skills and into
+# ~/.claude/skills. Both directories stay real — they also hold skills installed
+# from elsewhere (and Claude's synced/ bucket), so they cannot be linked wholesale.
+mkdir -p "$HOME/.agents/skills" "$HOME/.claude/skills"
+for skill in "$REPO_DIR"/config/agents/skills/*/; do
     [ -d "$skill" ] || continue
-    ln -sfnv "${skill%/}" "$HOME/.claude/skills/$(basename "$skill")"
+    name=$(basename "$skill")
+    ln -sfnv "${skill%/}" "$HOME/.agents/skills/$name"
+    ln -sfnv "${skill%/}" "$HOME/.claude/skills/$name"
 done
