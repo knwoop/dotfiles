@@ -1,5 +1,8 @@
 {
   "trustedcasks": [
     "aquaproj/aqua/aqua"
+  ],
+  "trustedformulae": [
+    "knwoop/tap/bd-grep"
   ]
 }
