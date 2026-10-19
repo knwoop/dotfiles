@@ -27,6 +27,16 @@ ln -sfnv "$XDG_CONFIG_HOME/emacs" "$HOME/.emacs.d"
 
 # Claude Code: link individual files so runtime data under ~/.claude is preserved.
 mkdir -p "$HOME/.claude"
+
+# settings.json is NOT tracked: Claude Code writes machine-gathered data into it
+# (autoMode records the current repo's org, protected branches and CI secret
+# names) and this repo is public. Only the sanitised sample is tracked, and the
+# real file is seeded from it once — never overwritten, or a re-run would throw
+# away whatever the running Claude Code has since put there.
+if [ ! -e "$REPO_DIR/config/claude/settings.json" ]; then
+    cp "$REPO_DIR/config/claude/settings.json.sample" "$REPO_DIR/config/claude/settings.json"
+    echo "seeded config/claude/settings.json from the sample; set OTEL_RESOURCE_ATTRIBUTES" >&2
+fi
 ln -sfv "$REPO_DIR/config/claude/settings.json" "$HOME/.claude/settings.json"
 ln -sfv "$REPO_DIR/config/claude/CLAUDE.md" "$HOME/.claude/CLAUDE.md"
 if [ -d "$HOME/.claude/commands" ] && [ ! -L "$HOME/.claude/commands" ]; then
