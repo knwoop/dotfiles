@@ -3,6 +3,23 @@ export LANG="en_US.UTF-8"
 
 unsetopt GLOBAL_RCS
 
+### resource limits ###
+# macOS hands every process a soft RLIMIT_NOFILE of 256. The tmux server keeps
+# one pty master fd open per pane, so a few hundred panes walk it up to the
+# ceiling — and tmux 3.6a's display-popup does not check job_run() for NULL, so
+# the first popup that cannot get an fd segfaults the server and takes every
+# session with it. The hard limit is unlimited, so raising the soft one needs
+# no privileges. A running server keeps the limit it was forked with: this only
+# helps servers started from a shell that read this file.
+#
+# Raise only. Some hosts (Claude Code) hand their shells a far higher limit on
+# purpose, and a bare `ulimit -n 4096` would quietly cut it back down.
+() {
+    local cur=$(ulimit -Sn)
+    [[ $cur == unlimited ]] && return
+    (( cur < 4096 )) && ulimit -n 4096
+}
+
 ### XDG ###
 export XDG_CONFIG_HOME="$HOME/.config"
 export XDG_DATA_HOME="$HOME/.local/share"
