@@ -264,6 +264,14 @@ _wt_new_claude_session() {
     tmux split-window -h -t "=$session_name:" -c "$dir" claude
 }
 
+# Create a detached tmux session with claude as its only pane. A shell takes
+# over when claude quits: as the last pane, claude alone would close the
+# session with it.
+_bd_new_claude_session() {
+    local session_name="$1" dir="$2"
+    tmux new-session -d -s "$session_name" -c "$dir" -- sh -c 'claude; exec "$SHELL" -l'
+}
+
 # A beads branch is "<repo>-<hash>-<slug>", so "<repo>/<branch>" says the repo
 # name twice. Drop the repeated prefix but keep the hash, which is what makes
 # the label unique: "kauche-app/kauche-app-5ld7-farm-storybook-stories-plan"
@@ -364,7 +372,7 @@ bd-dev() {
     local session_name
     session_name=$(_wt_session_name_for "$dir") || return
 
-    _wt_new_claude_session "$session_name" "$dir"
+    _bd_new_claude_session "$session_name" "$dir"
 
     # Record where this epic lives so anything outside the shell (Emacs, an
     # agent) can go issue -> worktree without re-deriving the naming convention.
