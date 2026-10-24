@@ -12,19 +12,25 @@
 # Both are lost when the server restarts, so session-opened.bash keeps them in
 # a file from tmux hooks, and that wins over tmux's own: after a restore,
 # session_created is the restore time for every session.
-# sort keeps to field 1 and is stable, so sessions sharing a timestamp stay in
-# tmux's own alphabetical order instead of the reverse-alphabetical one a
-# whole-line `sort -rn` falls back to.
+#
+# Sessions of the repository the current session is in come first, the main
+# checkout and its worktrees alike: a session's repository is its start
+# directory with any .worktree/ part dropped.
+# sort keeps to its key fields and is stable, so sessions sharing a timestamp
+# stay in tmux's own alphabetical order instead of the reverse-alphabetical one
+# a whole-line `sort -rn` falls back to.
 
 opened="${XDG_STATE_HOME:-$HOME/.local/state}/tmux/session-opened"
 [ -f "$opened" ] || opened=/dev/null
 
-tmux list-sessions -F $'#{?session_last_attached,#{session_last_attached},#{session_created}}\t#{session_created}\t#{session_name}' |
-    awk -F'\t' '
+tmux list-sessions -F $'#{?session_last_attached,#{session_last_attached},#{session_created}}\t#{session_created}\t#{session_path}\t#{session_name}' |
+    awk -F'\t' -v here="$(tmux display-message -p '#{session_path}')" '
+        function repo(path) { sub(/\/(\.git\/)?\.worktree\/.*/, "", path); return path }
+        BEGIN { here = repo(here) }
         FILENAME != "-" { saved[$3] = $1 "\t" $2; next }
-        { print ($3 in saved ? saved[$3] : $1 "\t" $2) "\t" $3 }
+        { print (repo($3) == here) "\t" ($4 in saved ? saved[$4] : $1 "\t" $2) "\t" $4 }
     ' "$opened" - |
-    sort -t$'\t' -k1,1rn -s |
+    sort -t$'\t' -k1,1rn -k2,2rn -s | cut -f2- |
     awk -F'\t' -v now="$(date +%s)" '
         BEGIN { icon["busy"] = "🟡"; icon["waiting"] = "🔴"; icon["idle"] = "🟢" }
         FNR == 1 { input++ }
