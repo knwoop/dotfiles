@@ -27,9 +27,50 @@ ln -sfnv "$XDG_CONFIG_HOME/emacs" "$HOME/.emacs.d"
 
 # Claude Code: link individual files so runtime data under ~/.claude is preserved.
 mkdir -p "$HOME/.claude"
+
+# settings.json is NOT tracked: Claude Code writes machine-gathered data into it
+# (autoMode records the current repo's org, protected branches and CI secret
+# names) and this repo is public. Only the sanitised sample is tracked, and the
+# real file is seeded from it once — never overwritten, or a re-run would throw
+# away whatever the running Claude Code has since put there.
+if [ ! -e "$REPO_DIR/config/claude/settings.json" ]; then
+    cp "$REPO_DIR/config/claude/settings.json.sample" "$REPO_DIR/config/claude/settings.json"
+    echo "seeded config/claude/settings.json from the sample" >&2
+fi
 ln -sfv "$REPO_DIR/config/claude/settings.json" "$HOME/.claude/settings.json"
 ln -sfv "$REPO_DIR/config/claude/CLAUDE.md" "$HOME/.claude/CLAUDE.md"
 if [ -d "$HOME/.claude/commands" ] && [ ! -L "$HOME/.claude/commands" ]; then
     rm -rf "$HOME/.claude/commands"
 fi
 ln -sfnv "$REPO_DIR/config/claude/commands" "$HOME/.claude/commands"
+
+# Skills live under config/agents/ because nothing in them is Claude-specific:
+# the same SKILL.md is linked into the vendor-neutral ~/.agents/skills and into
+# ~/.claude/skills. Both directories stay real — they also hold skills installed
+# from elsewhere (and Claude's synced/ bucket), so they cannot be linked wholesale.
+# A skill installed by some other tool lands as a real directory. `ln -sfn` onto
+# one does not replace it — it silently creates the link INSIDE it
+# (skills/ship/ship -> ...), which loads nothing and hides the repo version. So
+# move anything that is not already a symlink out of the way first.
+link_skill() {
+    src="$1"
+    dst="$2"
+    if [ -e "$dst" ] && [ ! -L "$dst" ]; then
+        # Park it outside the skills directory. A copy left alongside would be
+        # picked up as a second skill, under the backup directory's name.
+        backup_dir="$XDG_STATE_HOME/dotfiles/skills-replaced"
+        mkdir -p "$backup_dir"
+        backup="$backup_dir/$(basename "$dst")-$(date +%Y%m%d%H%M%S)"
+        echo "warning: $dst was installed outside dotfiles; moved to $backup" >&2
+        mv "$dst" "$backup"
+    fi
+    ln -sfnv "$src" "$dst"
+}
+
+mkdir -p "$HOME/.agents/skills" "$HOME/.claude/skills"
+for skill in "$REPO_DIR"/config/agents/skills/*/; do
+    [ -d "$skill" ] || continue
+    name=$(basename "$skill")
+    link_skill "${skill%/}" "$HOME/.agents/skills/$name"
+    link_skill "${skill%/}" "$HOME/.claude/skills/$name"
+done

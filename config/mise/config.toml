@@ -45,10 +45,12 @@ go = "latest"
 "go:mvdan.cc/gofumpt" = "latest"
 node = "25.6.1"
 "npm:@github/copilot-language-server" = "latest"
+"npm:@openai/codex" = "latest"
 "npm:hunkdiff" = "latest"
 "npm:typescript-language-server" = "latest"
 pnpm = "latest"
 python = "latest"
+"npm:typescript" = "latest"
 
 [settings]
 legacy_version_file = true

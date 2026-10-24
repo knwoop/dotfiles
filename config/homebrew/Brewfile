@@ -1,6 +1,7 @@
 brew "autoconf"
 brew "bash"
 brew "bat"
+brew "beads"
 brew "cmake"
 brew "colima"
 brew "coreutils"

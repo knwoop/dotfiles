@@ -65,7 +65,11 @@ if [ -d "$dir" ]; then
 fi
 
 if git show-ref --verify --quiet "refs/heads/$branch"; then
+    # Local branch exists: check it out in the worktree.
     git worktree add "$dir" "$branch" >&2
+elif git show-ref --verify --quiet "refs/remotes/origin/$branch"; then
+    # Branch exists only on the remote: create a local branch tracking it.
+    git worktree add --track -b "$branch" "$dir" "origin/$branch" >&2
 else
     git worktree add -b "$branch" "$dir" "$base_ref" >&2
 fi

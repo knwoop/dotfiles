@@ -50,3 +50,9 @@ e2e_coverage.out
 
 ### Markdown Preview ###
 .markdown-preview.html
+
+### beads ###
+.beads/
+
+### git worktree (gwt) ###
+.worktree/

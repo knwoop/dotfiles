@@ -257,12 +257,47 @@ gwt() {
     cd "$dir"
 }
 
-# Print tmux session name for a worktree dir: "<repo>/<branch>".
+# Create a detached tmux session: shell on the left, claude on the right (focused).
+_wt_new_claude_session() {
+    local session_name="$1" dir="$2"
+    tmux new-session -d -s "$session_name" -c "$dir"
+    tmux split-window -h -t "=$session_name:" -c "$dir" claude
+}
+
+# Create a detached tmux session with claude as its only pane. A shell takes
+# over when claude quits: as the last pane, claude alone would close the
+# session with it.
+_bd_new_claude_session() {
+    local session_name="$1" dir="$2"
+    tmux new-session -d -s "$session_name" -c "$dir" -- sh -c 'claude; exec "$SHELL" -l'
+}
+
+# A beads branch is "<repo>-<hash>-<slug>", so "<repo>/<branch>" says the repo
+# name twice. Drop the repeated prefix but keep the hash, which is what makes
+# the label unique: "kauche-app/kauche-app-5ld7-farm-storybook-stories-plan"
+# becomes "kauche-app/5ld7-farm-storybook-stories-plan". The branch itself is
+# untouched — bd-plan and bd-go still read the issue id off it.
+_wt_short_branch() {
+    local repo="$1" branch="$2"
+    [[ "$branch" == "$repo"-* ]] && branch=${branch#"$repo"-}
+    print -r -- "$branch"
+}
+
+# Print tmux session name for a worktree dir: "<repo>/<short branch>".
 _wt_session_name_for() {
-    local dir="$1" prefix branch
-    prefix=$(basename "$(dirname "$(git -C "$dir" rev-parse --path-format=absolute --git-common-dir)")") || return 1
-    branch=$(git -C "$dir" rev-parse --abbrev-ref HEAD) || return 1
-    printf '%s/%s\n' "$prefix" "$branch"
+    local dir="$1" main_root prefix top label
+    main_root=$(dirname "$(git -C "$dir" rev-parse --path-format=absolute --git-common-dir)") || return 1
+    prefix=$(basename "$main_root")
+    top=$(git -C "$dir" rev-parse --show-toplevel) || return 1
+    if [[ "$top" == "$main_root/.worktree/"* ]]; then
+        # Name it after the directory gwt cut, not after HEAD: a -work worktree
+        # checks out a different child branch per PR, and the session has to keep
+        # the name it was created with or wt-cd will open a second one.
+        label=${top#"$main_root/.worktree/"}
+    else
+        label=$(git -C "$dir" rev-parse --abbrev-ref HEAD) || return 1
+    fi
+    printf '%s/%s\n' "$prefix" "$(_wt_short_branch "$prefix" "$label")"
 }
 
 wt-new() {
@@ -276,22 +311,86 @@ wt-new() {
     local dir
     dir=$(command gwt "$branch") || return
 
-    local session_prefix session_name
-    session_prefix=$(basename "$(dirname "$(git -C "$dir" rev-parse --path-format=absolute --git-common-dir)")")
-    session_name="$session_prefix/$branch"
+    local session_name
+    session_name=$(_wt_session_name_for "$dir") || return
 
+    _wt_new_claude_session "$session_name" "$dir"
     if [[ -n "$TMUX" ]]; then
-        tmux new-session -d -s "$session_name" -c "$dir" claude
         tmux switch-client -t "$session_name"
         return
     fi
 
-    tmux new-session -s "$session_name" -c "$dir" claude
+    tmux attach-session -t "=$session_name"
 }
 widget::wt::new() {
     BUFFER="wt-new"
     zle accept-line
     zle -R -c
+}
+
+# Slugify an issue title for branch/session names. ASCII only: non-ASCII in a
+# branch name makes GitHub flag the PR head ref ("hidden characters") and the
+# worktree dir inherits it. Japanese-only titles slug to empty → branch is the
+# bare issue id.
+_bd_slugify() {
+    local s="$1"
+    s=${s//[^[:ascii:]]/}
+    s=${s//[^[:alnum:]]/-}
+    s=${(L)s}
+    while [[ "$s" == *--* ]]; do s=${s//--/-}; done
+    s=${s#-}; s=${s%-}
+    print -r -- "${s[1,40]}"
+}
+
+# Start a worktree + claude tmux session from a beads issue.
+# Session name: "<repo>/<issue-id>-<title-slug>" so it's readable in the session list.
+bd-dev() {
+    git rev-parse --show-toplevel >/dev/null 2>&1 || { echo "Not in a git repo"; return 1; }
+
+    local id title
+    if [[ -n "$1" ]]; then
+        id="$1"
+        title=$(bd show "$id" --json | jq -r '.[0].title') || return
+    else
+        local line
+        line=$(bd list --json --status open,in_progress \
+            | jq -r '.[] | "\(.id)\t\(.title)"' \
+            | fzf --prompt="beads issue> ") || return
+        [[ -z "$line" ]] && return
+        id=${line%%$'\t'*}
+        title=${line#*$'\t'}
+    fi
+
+    local slug branch
+    slug=$(_bd_slugify "$title")
+    # -plan suffix: this is the plan worktree; /bd-go cuts the matching -work one
+    branch="$id${slug:+-$slug}-plan"
+
+    local dir
+    dir=$(command gwt "$branch") || return
+
+    local session_name
+    session_name=$(_wt_session_name_for "$dir") || return
+
+    _bd_new_claude_session "$session_name" "$dir"
+
+    # Record where this epic lives so anything outside the shell (Emacs, an
+    # agent) can go issue -> worktree without re-deriving the naming convention.
+    # The path is relative to the main repo root on purpose: .beads/config.yaml
+    # carries a sync.remote, so issue data leaves this machine and must not
+    # contain $HOME or a username.
+    local main_root rel
+    main_root=$(dirname "$(git -C "$dir" rev-parse --path-format=absolute --git-common-dir)")
+    rel=${dir#"$main_root"/}
+    bd update "$id" --status in_progress \
+        --set-metadata "plan_worktree=$rel" \
+        --set-metadata "plan_session=$session_name" >/dev/null
+
+    if [[ -n "$TMUX" ]]; then
+        tmux switch-client -t "=$session_name"
+        return
+    fi
+    tmux attach-session -t "=$session_name"
 }
 widget::gwt::cd() {
     git rev-parse --show-toplevel >/dev/null 2>&1 || { zle -M "not in a git repo"; return; }
@@ -310,7 +409,7 @@ widget::gwt::cd() {
 
     if [[ -n "$TMUX" ]]; then
         if ! tmux has-session -t "=$session_name" 2>/dev/null; then
-            tmux new-session -d -s "$session_name" -c "$selected" claude
+            _wt_new_claude_session "$session_name" "$selected"
         fi
         tmux switch-client -t "$session_name"
         zle -R -c
@@ -320,17 +419,19 @@ widget::gwt::cd() {
     if tmux has-session -t "=$session_name" 2>/dev/null; then
         BUFFER="tmux attach-session -t ${(q)session_name}"
     else
-        BUFFER="tmux new-session -s ${(q)session_name} -c ${(q)selected} claude"
+        BUFFER="_wt_new_claude_session ${(q)session_name} ${(q)selected} && tmux attach-session -t =${(q)session_name}"
     fi
     zle accept-line
     zle -R -c
 }
 widget::tmux::attach() {
     local selected
-    selected=$(tmux list-sessions -F '#{session_name}' 2>/dev/null \
-        | fzf --reverse \
+    # most recently used first; --no-sort keeps that order while typing a query
+    selected=$(tmux list-sessions -F '#{session_activity} #{session_name}' 2>/dev/null \
+        | sort -rn | cut -d' ' -f2- \
+        | fzf --reverse --no-sort \
               --preview 'tmux capture-pane -ept {}:.0 -p 2>/dev/null | tail -n 80' \
-              --preview-window=right:60%)
+              --preview-window=right:45%)
     if [[ -z "$selected" ]]; then
         zle -R -c
         return
@@ -362,7 +463,8 @@ widget::gwt::remove() {
 
     local session_name branch has_session=0
     session_name=$(_wt_session_name_for "$selected") || session_name=""
-    branch="${session_name##*/}"
+    # ask git, not the session name: the session label drops the issue prefix
+    branch=$(git -C "$selected" rev-parse --abbrev-ref HEAD 2>/dev/null)
     [[ -n "$session_name" ]] && tmux has-session -t "=$session_name" 2>/dev/null && has_session=1
 
     if (( has_session )) && [[ -n "$TMUX" ]]; then
@@ -432,7 +534,7 @@ wt-rm-here() {
 
     local session_name branch
     session_name=$(_wt_session_name_for "$wt") || session_name=""
-    branch="${session_name##*/}"
+    branch=$(git -C "$wt" rev-parse --abbrev-ref HEAD 2>/dev/null)
 
     echo "Worktree: $wt"
     [[ -n "$branch" ]] && echo "Branch:   $branch"

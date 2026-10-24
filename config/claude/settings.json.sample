@@ -5,6 +5,7 @@
   "permissions": {
     "defaultMode": "auto"
   },
+  "model": "opus",
   "hooks": {
     "Notification": [
       {
@@ -108,6 +109,11 @@
       }
     ]
   },
+  "statusLine": {
+    "type": "command",
+    "command": "~/.config/claude/statusline.sh",
+    "padding": 0
+  },
   "enabledPlugins": {
     "gopls-lsp@claude-plugins-official": true,
     "typescript-lsp@claude-plugins-official": true,
@@ -115,7 +121,11 @@
     "telegram@claude-plugins-official": true,
     "figma@claude-plugins-official": true,
     "rust-analyzer-lsp@claude-plugins-official": true,
-    "adamsreview@adamsreview": true
+    "adamsreview@adamsreview": true,
+    "freee-mcp@freee-mcp-marketplace": true,
+    "explainer@explainer": true,
+    "see-it@see-it": true,
+    "claude-security@claude-plugins-official": true
   },
   "extraKnownMarketplaces": {
     "knwoop-clear-plan-skills": {
@@ -135,11 +145,32 @@
         "source": "github",
         "repo": "adamjgmiller/adamsreview"
       }
+    },
+    "freee-mcp-marketplace": {
+      "source": {
+        "source": "github",
+        "repo": "freee/freee-mcp"
+      }
+    },
+    "explainer": {
+      "source": {
+        "source": "github",
+        "repo": "mizchi/explainer"
+      }
+    },
+    "see-it": {
+      "source": {
+        "source": "github",
+        "repo": "knwoop/see-it"
+      }
     }
   },
   "alwaysThinkingEnabled": true,
   "effortLevel": "high",
+  "tui": "fullscreen",
+  "skipWorkflowUsageWarning": true,
   "theme": "auto",
   "editorMode": "vim",
+  "agentPushNotifEnabled": true,
   "skipAutoPermissionPrompt": true
 }

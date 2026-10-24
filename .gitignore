@@ -7,3 +7,10 @@ local.*
 *.zwc
 .zcomp*
 config/emacs
+
+### Claude Code live settings ###
+# Claude Code writes machine-gathered data into this file by itself — autoMode
+# records the current repo's org, protected branches and CI secret names. This
+# repo is public, so only the sanitised sample is tracked; setup-links.bash
+# seeds the real file from it on a fresh machine.
+config/claude/settings.json
