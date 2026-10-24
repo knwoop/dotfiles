@@ -1,19 +1,6 @@
 {
   "env": {
-    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1",
-    "CLAUDE_CODE_ENABLE_TELEMETRY": "1",
-    "OTEL_LOG_USER_PROMPTS": "1",
-    "OTEL_LOG_ASSISTANT_RESPONSES": "0",
-    "OTEL_LOG_TOOL_DETAILS": "0",
-    "OTEL_LOG_TOOL_CONTENT": "0",
-    "OTEL_LOG_RAW_API_BODIES": "0",
-    "OTEL_LOGS_EXPORTER": "otlp",
-    "OTEL_METRICS_EXPORTER": "none",
-    "OTEL_TRACES_EXPORTER": "none",
-    "OTEL_EXPORTER_OTLP_PROTOCOL": "http/json",
-    "OTEL_EXPORTER_OTLP_ENDPOINT": "https://telemetry.googleapis.com",
-    "OTEL_RESOURCE_ATTRIBUTES": "gcp.project_id=REPLACE_ME",
-    "OTEL_METRICS_INCLUDE_ENTRYPOINT": "true"
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
   },
   "permissions": {
     "defaultMode": "auto"

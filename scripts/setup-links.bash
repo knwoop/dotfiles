@@ -35,7 +35,7 @@ mkdir -p "$HOME/.claude"
 # away whatever the running Claude Code has since put there.
 if [ ! -e "$REPO_DIR/config/claude/settings.json" ]; then
     cp "$REPO_DIR/config/claude/settings.json.sample" "$REPO_DIR/config/claude/settings.json"
-    echo "seeded config/claude/settings.json from the sample; set OTEL_RESOURCE_ATTRIBUTES" >&2
+    echo "seeded config/claude/settings.json from the sample" >&2
 fi
 ln -sfv "$REPO_DIR/config/claude/settings.json" "$HOME/.claude/settings.json"
 ln -sfv "$REPO_DIR/config/claude/CLAUDE.md" "$HOME/.claude/CLAUDE.md"
