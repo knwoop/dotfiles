@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+# claude, kept from sending telemetry anywhere outside kauche-app.
+#
+# kauche-app's SessionStart hook copies its telemetry env into the user
+# settings, which every repository reads, so a session anywhere would export
+# to kauche's project if it could authenticate. Outside kauche-app, point the
+# per-signal OTLP endpoints at a closed local port: they win over the generic
+# endpoint the settings set, and no settings file sets them, so nothing
+# rewrites them. config/claude/telemetry-guard.sh warns at session start when
+# a session runs outside kauche-app without this.
+#
+# Lives in its own PATH directory, ahead of ~/.local/bin where the real
+# claude is, and execs the next claude on PATH.
+
+self="$0"
+real=""
+IFS=: read -r -a dirs <<<"$PATH"
+for d in "${dirs[@]}"; do
+    [ -x "$d/claude" ] && ! [ "$d/claude" -ef "$self" ] && { real="$d/claude"; break; }
+done
+[ -n "$real" ] || { echo "claude: no claude on PATH besides $self" >&2; exit 127; }
+
+case "$(git config --get remote.origin.url 2>/dev/null)" in
+*[:/]x-asia/kauche-app | *[:/]x-asia/kauche-app.git)
+    # A claude started from a guarded one (from its Bash tool, say) inherits
+    # the closed endpoints; kauche-app must still get its telemetry.
+    if [ -n "${CLAUDE_TELEMETRY_GUARD:-}" ]; then
+        unset CLAUDE_TELEMETRY_GUARD OTEL_EXPORTER_OTLP_LOGS_ENDPOINT \
+            OTEL_EXPORTER_OTLP_METRICS_ENDPOINT OTEL_EXPORTER_OTLP_TRACES_ENDPOINT
+    fi
+    ;;
+*)
+    closed=http://127.0.0.1:9
+    export CLAUDE_TELEMETRY_GUARD=1 \
+        OTEL_EXPORTER_OTLP_LOGS_ENDPOINT="$closed/v1/logs" \
+        OTEL_EXPORTER_OTLP_METRICS_ENDPOINT="$closed/v1/metrics" \
+        OTEL_EXPORTER_OTLP_TRACES_ENDPOINT="$closed/v1/traces"
+    ;;
+esac
+
+exec "$real" "$@"

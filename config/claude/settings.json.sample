@@ -95,6 +95,15 @@
             "command": "[ -n \"$MUXAC_SESSION_NAME\" ] && muxac hook || true"
           }
         ]
+      },
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.config/claude/telemetry-guard.sh"
+          }
+        ]
       }
     ],
     "SessionEnd": [
