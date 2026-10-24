@@ -86,8 +86,14 @@ if [ -f "$CACHE_FILE" ]; then
     count=$(jq -r --arg repo "$repo" \
         '[.[] | select($repo == "" or .repository.nameWithOwner == $repo)] | length' \
         "$CACHE_FILE" 2>/dev/null || echo 0)
-    [ -n "$repo" ] &&
-        REVIEW_URL="https://github.com/$repo/pulls?q=is%3Apr+is%3Aopen+draft%3Afalse+review-requested%3A%40me"
+    if [ -n "$repo" ]; then
+        # The repository's own review-requested page wants my login in the URL;
+        # gh knows it, but asking takes a tenth of a second on every redraw.
+        login_file="$CACHE_DIR/login"
+        [ -s "$login_file" ] || gh config get -h github.com user >"$login_file" 2>/dev/null
+        login=$(cat "$login_file" 2>/dev/null)
+        [ -n "$login" ] && REVIEW_URL="https://github.com/$repo/pulls/review-requested/$login"
+    fi
     if [ "${count:-0}" -gt 0 ]; then
         # The text itself links to the list (an OSC 8 hyperlink), rather than a
         # spelled-out URL taking up half the line.
