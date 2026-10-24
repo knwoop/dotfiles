@@ -642,3 +642,7 @@ if [ -f '/opt/homebrew/share/google-cloud-sdk/completion.zsh.inc' ]; then . '/op
 autoload -Uz compinit
 compinit
 export PATH="$HOME/.local/bin:$PATH"
+
+# Wrappers that must shadow anything else on PATH, ~/.local/bin included —
+# so this stays the last PATH change. See config/scripts/wrap/claude.
+path=("$XDG_CONFIG_HOME/scripts/wrap"(N-/) "$path[@]")
