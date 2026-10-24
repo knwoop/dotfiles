@@ -129,7 +129,7 @@ fi
 self="$(cd "$(dirname "$0")" && pwd)/$(basename "$0")"
 selected="$(
     list sessions |
-        fzf --reverse --no-sort --header-lines=1 --delimiter='\t' --with-nth=1..3 --nth=1 --tabstop=1 \
+        fzf --reverse --border=none --no-sort --header-lines=1 --delimiter='\t' --with-nth=1..3 --nth=1 --tabstop=1 \
             --prompt='session> ' --header='ctrl-r: sessions / repository roots' \
             --bind "ctrl-r:transform:[ \"\$FZF_PROMPT\" = 'session> ' ] &&
                 echo 'reload($self --list roots)+change-prompt(root> )+first' ||
