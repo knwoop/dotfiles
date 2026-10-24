@@ -61,8 +61,8 @@ small).
 
 2. Create the tmux session exactly as the bd-dev skill does (session
    `<repo>/<issue-hash>-<slug>-work` — only the branch's repeated leading
-   `<repo>-` is dropped from the session label, left shell / right claude,
-   pane_id handling, never recreate an existing session), with claude launched
+   `<repo>-` is dropped from the session label, claude as the only pane with
+   the prompt passed as an argument, never recreate an existing session), with claude launched
    on the implementation mandate below. The session keeps that name for the
    life of the worktree even though you switch it to a child branch per PR.
 3. Record the work worktree on the **epic** (never on a child — a reader walks

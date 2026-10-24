@@ -1,6 +1,6 @@
 ---
 name: bd-dev
-description: Cut a beads (bd) issue and its dev environment — nothing more. Interviews the user just enough to name the issue and branch (or takes a task description / existing bd issue ID), creates the bd issue, creates a worktree via gwt with a readable branch name, and starts a tmux session with a plain claude in the same style as wt-new. Planning and implementation happen INSIDE the worktree session (the user runs /bd-plan there to cut child issues). Trigger on "bd-dev <task>", "/bd-dev", or when the user asks to start a task with beads. Pass multiple tasks/IDs to launch them in parallel.
+description: Cut a beads (bd) issue and its dev environment — nothing more. Interviews the user just enough to name the issue and branch (or takes a task description / existing bd issue ID), creates the bd issue, creates a worktree via gwt with a readable branch name, and starts a tmux session with a plain claude as its only pane. Planning and implementation happen INSIDE the worktree session (the user runs /bd-plan there to cut child issues). Trigger on "bd-dev <task>", "/bd-dev", or when the user asks to start a task with beads. Pass multiple tasks/IDs to launch them in parallel.
 ---
 
 # bd-dev
@@ -11,8 +11,8 @@ create-plan → `/bd-plan` to attach the plan and cut child issues).
 
 Beads counterpart of the `issue-dev` skill (Linear) and non-interactive counterpart
 of the user's `bd-dev` zsh function (`~/.config/zsh/.zshrc`). Worktree creation uses
-the same `gwt` (`~/.config/scripts/bin/gwt`), and the tmux session name / pane layout
-match `wt-new` / `_wt_new_claude_session`. If gwt, wt-new, or the bd-dev zsh function
+the same `gwt` (`~/.config/scripts/bin/gwt`), the tmux session name matches `wt-new`,
+and the claude-only session matches `_bd_new_claude_session`. If gwt, wt-new, or the bd-dev zsh function
 changes, update this skill to match.
 
 Requires a repo where `bd init` has been run (a `.beads/` directory at the main repo
@@ -79,8 +79,8 @@ refer to issues by title in questions and reports (IDs may appear alongside, sma
    - stdout is the worktree path. If it already exists, gwt just returns the path — idempotent.
    - The base is origin's default branch (gwt fetches and resolves it).
 
-4. Create the tmux session. Naming and layout identical to wt-new
-   (left pane shell / right pane claude). The session name is
+4. Create the tmux session: one pane, claude only. Naming identical to wt-new,
+   but not its layout (wt-new adds a shell pane on the left). The session name is
    `<repo dir name>/<branch with the leading "<repo>-" removed>` — the repeated
    repo name goes, the issue hash stays, so the session list reads
    `kauche-app/5ld7-farm-storybook-stories-plan` instead of
@@ -92,14 +92,15 @@ refer to issues by title in questions and reports (IDs may appear alongside, sma
    session="$(basename "$repo_root")/<issue-hash>-<slug>-plan"
    # tmux session name constraint: replace '.' and ':' with '_'
    if ! tmux has-session -t "=$session" 2>/dev/null; then
-     # Target the split at the pane id returned by new-session. Targeting the
-     # session name or ":0" fails under base-index 1 ("can't find window: 0" /
-     # "can't find pane").
-     pane=$(tmux new-session -d -P -F '#{pane_id}' -s "$session" -c "$dir")
-     tmux split-window -h -t "$pane" -c "$dir" \
-       claude "Read beads issue <id> with 'bd show <id> --json' for context, then wait for the user. Do NOT start planning or implementing on your own — the user drives from here (typically create-plan, then /bd-plan to cut child issues under this one, then /bd-go to dispatch them)."
+     tmux new-session -d -s "$session" -c "$dir" -- \
+       sh -c 'claude "$1"; exec "$SHELL" -l' sh \
+       "Read beads issue <id> with 'bd show <id> --json' for context, then wait for the user. Do NOT start planning or implementing on your own — the user drives from here (typically create-plan, then /bd-plan to cut child issues under this one, then /bd-go to dispatch them)."
    fi
    ```
+
+   A shell takes over when claude quits: as the only pane, claude alone would
+   close the session with it. The prompt goes to claude as an argument, never
+   through a shell, so any quoting in it is safe.
 
    The claude prompt is context-only on purpose: this skill stops at environment
    setup. If the session already exists, do not recreate it (never destroy a
