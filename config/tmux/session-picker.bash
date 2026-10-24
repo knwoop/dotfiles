@@ -8,11 +8,21 @@
 # activity is bumped by any pane output, so a session with something chattering
 # away in it floats to the top although it was never opened. Sessions created
 # detached report an empty last_attached and fall back to their creation time.
+# Both are lost when the server restarts, so session-opened.bash keeps them in
+# a file from tmux hooks, and that wins over tmux's own: after a restore,
+# session_created is the restore time for every session.
 # sort keeps to field 1 and is stable, so sessions sharing a timestamp stay in
 # tmux's own alphabetical order instead of the reverse-alphabetical one a
 # whole-line `sort -rn` falls back to.
 
-tmux list-sessions -F '#{?session_last_attached,#{session_last_attached},#{session_created}} #{session_name}' |
+opened="${XDG_STATE_HOME:-$HOME/.local/state}/tmux/session-opened"
+[ -f "$opened" ] || opened=/dev/null
+
+tmux list-sessions -F $'#{?session_last_attached,#{session_last_attached},#{session_created}}\t#{session_name}' |
+    awk -F'\t' '
+        FILENAME != "-" { saved[$2] = $1; next }
+        { print ($2 in saved ? saved[$2] : $1) " " $2 }
+    ' "$opened" - |
     sort -k1,1rn -s | cut -d' ' -f2- |
     awk -F'\t' '
         BEGIN { icon["busy"] = "🟡"; icon["waiting"] = "🔴"; icon["idle"] = "🟢" }
