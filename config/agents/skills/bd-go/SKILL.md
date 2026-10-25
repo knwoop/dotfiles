@@ -155,13 +155,15 @@ The implementation mandate (launch prompt), with IDs filled in:
 >    mergeStateStatus DIRTY) → switch to that branch, rebase it onto its
 >    base, resolve, push, then 'gh stack sync' for the layers above. UNKNOWN
 >    right after a push is GitHub still computing; check again next sweep.
-> 3. Close merged children, bottom of the stack first: 'gh stack view --json',
+> 3. Close merged children, bottom of the stack first. Always name the issue
+>    in 'bd close': without an ID it closes the last issue bd touched, which
+>    after a 'bd show' of a blocker is the wrong one. 'gh stack view --json',
 >    then for each branch with isMerged true whose child is still open,
 >    'bd close <child-id> --reason "PR #<n> merged"'. Going bottom-up closes
 >    each blocker before the child that depends on it. If bd still refuses
 >    with "blocked by open issues": when the blocking sibling's PR has
 >    merged too, close that one first; otherwise the merged PR is the source
->    of truth, so 'bd close --force' the child and leave
+>    of truth, so 'bd close <child-id> --force --reason "PR #<n> merged"' and leave
 >    'bd comment <child-id> "closed with open blocker <blocker title>"'.
 > 4. A PR closed without merge ('gh pr view <n> --json state'): report it to
 >    the user; do not guess.
@@ -174,19 +176,24 @@ The implementation mandate (launch prompt), with IDs filled in:
 > that child's branch, push fix commits (prefer appending over amending), then
 > 'gh stack sync' so the layers above are rebased and pushed.
 >
-> **Finish: close the epic here.** When the sweep leaves no open child (the
-> 'bd list --json --parent <epic-id> --all -n 0' listing is non-empty and
-> every entry is closed):
-> - 'bd close <epic-id> --reason "all child PRs merged"', then drop the
->   worktree pointers that are about to go stale:
->   'bd update <epic-id> --unset-metadata plan_worktree --unset-metadata
->   plan_session --unset-metadata work_worktree --unset-metadata work_session'.
-> - Final report: every child with its merged PR; for each merged PR,
->   whether its post-merge workflows ran ('gh run list --commit <merge sha>'
->   — merging a whole stack at once can skip per-PR deploy/apply runs); and
->   any step the plan says happens after merge (apply, migration, manual
->   check) that is still to do. Then tell the user both worktrees/sessions
->   for this epic can be removed.
+> **Finish: close the epic here — post-merge work first.** When the sweep
+> leaves no open child (the 'bd list --json --parent <epic-id> --all -n 0'
+> listing is non-empty and every entry is closed):
+> 1. Check what merging does not finish: for each merged PR, whether its
+>    post-merge workflows ran and passed ('gh run list --commit <merge sha>'
+>    — merging a whole stack at once can skip per-PR deploy/apply runs), and
+>    every step the plan says happens after merge (apply, migration, manual
+>    check).
+> 2. Anything still to do → do NOT close the epic and keep its metadata.
+>    Record it ('bd comment <epic-id> "post-merge pending: ..."'), report it
+>    to the user, and repeat this check on later sweeps until the user
+>    confirms it is done.
+> 3. Nothing left → 'bd close <epic-id> --reason "all child PRs merged"',
+>    then drop the worktree pointers that are about to go stale:
+>    'bd update <epic-id> --unset-metadata plan_worktree --unset-metadata
+>    plan_session --unset-metadata work_worktree --unset-metadata work_session'.
+>    Final report: every child with its merged PR, then tell the user both
+>    worktrees/sessions for this epic can be removed.
 >
 > Never merge a PR, never 'gh stack merge', never 'gh stack unstack' — the
 > user merges, bottom-up.
@@ -202,8 +209,9 @@ The implementation mandate (launch prompt), with IDs filled in:
 - A child PR CLOSED without merge: flag it to the user instead of guessing.
 - All children closed but the epic still open (the work session normally
   closes it; this is the fallback when that session is gone), where the
-  `--all` listing is non-empty and every entry has status `closed`:
-  `bd close <epic-id>`, drop the worktree pointers that
+  `--all` listing is non-empty and every entry has status `closed`: run the
+  work mandate's post-merge check first and keep the epic open if anything
+  is pending; otherwise `bd close <epic-id>`, drop the worktree pointers that
   are about to go stale, and tell the user both worktrees/sessions for this
   epic can be removed:
 
