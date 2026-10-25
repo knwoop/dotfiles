@@ -322,7 +322,10 @@ carries a fixed one-line nudge:
 ## Notes
 
 - If the epic has no children yet (no plan), say so and suggest `/bd-plan`
-  first.
+  first. An issue with metadata `delivery=direct` is on the small-task path
+  (bd-dev "Small tasks"): it has one PR from the plan branch and no work
+  worktree, so do not cut one — report that PR's state instead, and close
+  the issue the way that section says once it has merged.
 - `gh stack` facts (github/gh-stack v0.1.1, verified 2026-09-25): works from
   a worktree; tracking lives in the git common dir (`.git/gh-stack`), shared
   by all worktrees of the repo and local to the machine; each layer records
