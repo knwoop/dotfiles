@@ -198,5 +198,5 @@ The implementation mandate (launch prompt), with IDs filled in:
   interactive in a TTY — always pass `--auto` (`--open` for ready-for-review,
   otherwise PRs are drafts); `sync` aborts instead of prompting when local
   and remote stacks diverge — report that to the user.
-- Keep `bd-dev`, `bd-plan`, and this skill in sync — they share branch/session
+- Keep `bd-dev`, `bd-research`, `bd-plan`, and this skill in sync — they share branch/session
   conventions and the lifecycle.

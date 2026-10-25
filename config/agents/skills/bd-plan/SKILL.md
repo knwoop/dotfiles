@@ -10,8 +10,9 @@ full plan in its `design` field and becomes an epic; child task issues are cut p
 TODO item with blocking dependencies so `bd ready` surfaces only what can be started.
 
 Normal operation (set up by the `bd-dev` skill): bd-dev cuts the issue + worktree +
-session, the user plans inside that session (create-plan), then runs this skill to
-hand the plan to bd.
+session, the user optionally researches first (`bd-research`, stored in the issue's
+`notes`), plans inside that session (create-plan), then runs this skill to hand the
+plan to bd.
 
 ## Input
 
@@ -19,7 +20,9 @@ hand the plan to bd.
   TODO / References / Verification) — pasted, on the clipboard (`pbpaste`), or just
   produced in this conversation (Plan Mode / clear-plan-skills:create-plan).
 - If no plan exists yet, plan first (clear-plan-skills:create-plan), get the user's
-  OK, then continue here.
+  OK, then continue here. If the issue carries research from `bd-research`
+  (`bd show <id> --json` → `.[0].notes`, or `.[0].metadata.research_doc`), plan
+  from it: answer its "Questions for the plan" and cite it under References.
 - Parent issue:
   - **Inside a bd-dev plan worktree** (the usual case): derive it from the
     branch — the branch is `<issue-id>-<slug>-plan`, so the parent is the
