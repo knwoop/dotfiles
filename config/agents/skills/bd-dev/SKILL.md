@@ -29,7 +29,7 @@ root). If there is none, ask the user before running `bd init`.
   /bd-plan), and the description will be superseded by the plan in the issue's
   design field anyway.
 - A reference to an existing issue — by title words, or an ID if the user happens
-  to paste one → resolve it via `bd list --json` (step 2b).
+  to paste one → resolve it via `bd list --json -n 0` (step 2b).
 - Multiple tasks/references allowed; repeat steps 2–5 per issue.
 - No arguments: run `bd list --json --status open` and ask which one(s) to start
   with AskUserQuestion, presenting **titles** as the options.
@@ -56,7 +56,7 @@ refer to issues by title in questions and reports (IDs may appear alongside, sma
       The JSON output object has the `id` field (form `<project>-<hash>`).
 
    b. **Existing issue**: resolve the user's reference (title words or pasted ID)
-      against `bd list --json`; confirm with `bd show <id> --json` (output is an
+      against `bd list --json -n 0` (the default stops at 50); confirm with `bd show <id> --json` (output is an
       array; title is `.[0].title`). If ambiguous or not found, ask by title
       instead of guessing.
 
@@ -137,8 +137,9 @@ refer to issues by title in questions and reports (IDs may appear alongside, sma
 
    Claude's Bash cannot switch the user's tmux client, so only present the commands.
    Remind the user: plan inside the session (`/bd-plan` uses this issue as the
-   parent), review feedback is handled in that session, and the issue is closed
-   from the main repo after they merge.
+   parent), `/bd-go` later starts implementation from it, and issues close as
+   PRs merge: children by the work session, the epic by a `/bd-go` pass in the
+   plan session (see "Issue lifecycle").
 
 ## Issue lifecycle
 

@@ -26,9 +26,18 @@ plan to bd.
 - Parent issue:
   - **Inside a bd-dev plan worktree** (the usual case): derive it from the
     branch — the branch is `<issue-id>-<slug>-plan`, so the parent is the
-    `bd list --json | jq -r '.[].id'` entry that is a prefix of
-    `git rev-parse --abbrev-ref HEAD`. Confirm with
-    `bd show <id>`.
+    longest issue ID that, followed by `-`, prefixes the branch:
+
+    ```bash
+    branch=$(git rev-parse --abbrev-ref HEAD)
+    bd list --json --all -n 0 | jq -r --arg b "$branch" \
+      '[.[].id | select(. as $id | $b | startswith($id + "-"))] | max_by(length) // empty'
+    ```
+
+    `--all -n 0` matters: `bd list` returns only 50 open issues by default,
+    and a busy repo has far more, so the epic can be missing from the list.
+    The trailing `-` keeps `x-a1` from matching a branch cut for `x-a1b2`.
+    Confirm with `bd show <id>`.
   - An explicit issue ID as argument overrides this.
   - Neither (e.g. run from the main repo): fall back to creating a standalone epic
     node in the graph (add an `epic` node and use `parent_key` instead of
@@ -95,5 +104,6 @@ plan to bd.
   than recreating the graph.
 - `bd dep add <issue> <blocker>` adds a dependency after the fact if an ordering
   constraint was missed.
-- Close each child as its TODO lands (`bd close <child-id>`); the epic itself is
-  closed from the main repo after the PR merges (see bd-dev lifecycle).
+- Children are closed by the work session when their PR merges, and the epic by
+  a `/bd-go` pass in this plan worktree once every child is closed (see the
+  bd-dev "Issue lifecycle" section). Never close them from here at plan time.

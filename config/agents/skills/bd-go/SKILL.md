@@ -37,10 +37,14 @@ small).
 
 ## Every pass: orient first
 
-- Resolve the epic from the branch name; `bd show <epic-id> --json` — the
+- Resolve the epic from the branch name with bd-plan's "Parent issue"
+  snippet (`bd list --all -n 0`; the default list stops at 50 open issues);
+  `bd show <epic-id> --json` — the
   `design` field is the plan; re-read it every pass (the user may have revised
   it via update-plan).
-- Enumerate children and status: `bd list --json --parent <epic-id>`,
+- Enumerate children and status: `bd list --json --parent <epic-id> --all -n 0`
+  (without `--all`, closed children are hidden, so a fully merged epic looks
+  childless),
   `bd list --pretty`, `bd ready`. Each child's blockers are in
   `bd show <child-id> --json` → `.[0].dependencies[]` (keep only entries that
   are siblings under this epic; the epic itself may appear via the
@@ -91,7 +95,7 @@ The implementation mandate (launch prompt), with IDs filled in:
 
 > You are the implementer for beads epic <epic-id>. Read it with
 > 'bd show <epic-id> --json' — the design field is the plan. List the child
-> issues with 'bd list --json --parent <epic-id>'; they are your work queue.
+> issues with 'bd list --json --parent <epic-id> -n 0'; they are your work queue.
 > Work in THIS worktree only. Deliver the whole epic as GitHub **stacked PRs
 > managed with `gh stack`, one PR per child, built in one go** — never wait
 > for a merge to start the next child.
@@ -162,7 +166,8 @@ The implementation mandate (launch prompt), with IDs filled in:
   base still points at an already-merged branch — tell the user to say
   "continue" in the work session).
 - A child PR CLOSED without merge: flag it to the user instead of guessing.
-- All children closed: `bd close <epic-id>`, drop the worktree pointers that
+- All children closed (the `--all` listing is non-empty and every entry has
+  status `closed`): `bd close <epic-id>`, drop the worktree pointers that
   are about to go stale, and tell the user both worktrees/sessions for this
   epic can be removed:
 
