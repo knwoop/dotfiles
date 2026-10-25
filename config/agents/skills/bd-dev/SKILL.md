@@ -95,7 +95,7 @@ refer to issues by title in questions and reports (IDs may appear alongside, sma
    if ! tmux has-session -t "=$session" 2>/dev/null; then
      tmux new-session -d -s "$session" -c "$dir" -- \
        sh -c 'claude "$1"; exec "$SHELL" -l' sh \
-       "Read beads issue <id> with 'bd show <id> --json' for context, then wait for the user. Do NOT start planning or implementing on your own — the user drives from here (typically /bd-research when investigation is needed, then create-plan, then /bd-plan to cut child issues under this one, then /bd-go to dispatch them). Start every status report, and any reply after a context compaction, with '[<issue title> / plan session]' (add ' / work: <work_session>' once the issue's metadata has one); if you lose track of which issue this is, recover it from the branch and 'bd show <id> --json', never guess."
+       "Read beads issue <id> with 'bd show <id> --json' for context, then wait for the user. Do NOT start planning or implementing on your own — the user drives from here (typically /bd-research when investigation is needed, then create-plan, then /bd-plan to cut child issues under this one, then /bd-go to dispatch them). If the user says to just do the task here without a plan, follow the 'Small tasks: work directly in the plan worktree' section of the bd-dev skill (~/.agents/skills/bd-dev/SKILL.md). Start every status report, and any reply after a context compaction, with '[<issue title> / plan session]' (add ' / work: <work_session>' once the issue's metadata has one); if you lose track of which issue this is, recover it from the branch and 'bd show <id> --json', never guess."
    fi
    ```
 
@@ -141,6 +141,65 @@ refer to issues by title in questions and reports (IDs may appear alongside, sma
    PRs merge: children and then the epic by the work session, with a `/bd-go`
    pass in the plan session as the fallback (see "Issue lifecycle").
 
+## Small tasks: work directly in the plan worktree
+
+When the user says the task needs no plan ("just fix it in this session",
+"no plan needed", "do it here"), the plan session does the work itself:
+one issue, one PR, no epic, no children, no work worktree. This is a
+supported path, but only on the user's word — never switch to it on your
+own because the task looks small.
+
+1. Mark the issue so other tools and later passes know which path it is on:
+   `bd update <id> --set-metadata delivery=direct`.
+2. Optional research first (`/bd-research`) if the code needs mapping;
+   otherwise implement and commit on the plan worktree's own branch
+   (`<id>-<slug>-plan`). Do not cut a `-work` worktree or extra branches.
+3. Open one PR from that branch (`/ship` or `gh pr create`), then record it:
+   `bd update <id> --external-ref gh-<n>` and `bd comment <id> "PR #<n>"`.
+4. Review comments are handled here: push fix commits on the same branch.
+5. At the start of every later turn, check the PR
+   (`gh pr view <n> --json state,mergeable,mergeStateStatus`), the same way
+   the work session sweeps: rebase and push on conflict; MERGED → check
+   post-merge runs (`gh run list --commit <merge sha>`) and any step the
+   task needs after merge, and if nothing is left,
+   `bd close <id> --reason "PR #<n> merged"` and
+   `bd update <id> --unset-metadata plan_worktree --unset-metadata plan_session`,
+   then tell the user the worktree/session can be removed. CLOSED without
+   merge → report it, do not guess.
+6. If the task turns out to need more than one PR or a real design choice,
+   stop and say so. Before any switch, show what already exists: the
+   commits on this branch that are not on the default branch
+   (`git log --oneline <default>..HEAD`) and the PR, if one is open. `/bd-go`
+   builds every child from the default branch, so these commits are lost
+   unless the user decides where they go. Ask which of these to do:
+   - **Ship what is done, plan the rest separately**: narrow this PR to the
+     finished part and keep this issue on the direct path. The remaining
+     work becomes a new issue (`/bd-dev`), planned and built the normal way
+     once this PR has merged.
+   - **Carry the commits into the plan**: go create-plan → `/bd-plan` on this
+     issue, and name the child the commits belong to. Then record them as
+     full SHAs, oldest first, never as an `A..B` range (`A..B` leaves out `A`,
+     so the first commit would be lost, and a single commit would give an
+     empty range):
+
+     ```bash
+     shas=$(git rev-list --reverse <default>..HEAD | tr '\n' ' ')
+     bd comment <child-id> "Carry over: $shas"
+     ```
+
+     (`bd-go`'s work session cherry-picks them onto that child's branch
+     first). If only some of them belong to that child, list just those.
+     Close the old PR without merging, with a comment saying the child's PR
+     replaces it, and clear `external_ref` on this issue.
+   - **Drop the commits**: start the plan from the default branch. Close the
+     PR without merging, and clear `external_ref`.
+
+   Only then drop the marker (`bd update <id> --unset-metadata delivery`)
+   and continue on the normal path. Never reset or force-push the plan
+   branch to make the switch; the commits stay there for the cherry-pick.
+
+Never merge the PR yourself.
+
 ## Issue lifecycle
 
 The worktree this skill cuts is the epic's **plan worktree**: planning and
@@ -158,6 +217,7 @@ bd follows it. Who does what:
 | Merge | the user | bottom of the stack first (GitHub stack UI or `gh stack merge`); never merge from a session |
 | Close children | work session sweep, every turn | `gh stack sync --prune`, conflict check, then `bd close <child-id> --reason "PR #<n> merged"` for merged layers, bottom-up |
 | Close epic | work session (fallback: plan worktree, `/bd-go` pass) | `bd close <epic-id>` + unset worktree metadata when the last child closes |
+| Small task (user's call) | plan worktree only | `delivery=direct`: one PR from the `-plan` branch, closed by this session when it merges (see "Small tasks") |
 
 - Issues stay `in_progress` through review. There is no built-in "in review"
   status (open / in_progress / blocked / deferred / closed), and a custom one is

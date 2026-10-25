@@ -116,6 +116,11 @@ The implementation mandate (launch prompt), with IDs filled in:
 >    'gh stack rebase' once so the trunk is fast-forwarded to origin. Later
 >    children: 'gh stack top && gh stack add <child-branch>' (a new layer on
 >    the current top). 'bd update <child-id> --status in_progress'.
+>    If the child has a 'Carry over: <sha> <sha> ...' comment
+>    ('bd comments <child-id> --json'), cherry-pick exactly those commits,
+>    in the listed order ('git cherry-pick <sha> <sha> ...'), onto the new
+>    branch first (the commits come from a small task that grew into this
+>    epic) and resolve any conflict before building the rest of the child.
 > 2. Implement and commit on that branch.
 > 3. 'gh stack submit --auto --open' (non-interactive: pushes every branch,
 >    creates the PR for the new layer as ready-for-review, updates bases,
@@ -322,7 +327,10 @@ carries a fixed one-line nudge:
 ## Notes
 
 - If the epic has no children yet (no plan), say so and suggest `/bd-plan`
-  first.
+  first. An issue with metadata `delivery=direct` is on the small-task path
+  (bd-dev "Small tasks"): it has one PR from the plan branch and no work
+  worktree, so do not cut one — report that PR's state instead, and close
+  the issue the way that section says once it has merged.
 - `gh stack` facts (github/gh-stack v0.1.1, verified 2026-09-25): works from
   a worktree; tracking lives in the git common dir (`.git/gh-stack`), shared
   by all worktrees of the repo and local to the machine; each layer records
