@@ -143,40 +143,58 @@ The implementation mandate (launch prompt), with IDs filled in:
 > and pause; on "continue", resume from that child. Once all PRs exist,
 > report every stack in **merge order** (bottom first): child title, PR URL.
 >
-> **Stack maintenance: the sweep.** Run it right after the build, and then
-> at the start of EVERY turn in this session, before anything else the user
-> asked. The user should never have to report a merge or a conflict:
-> "merged", a PR URL, "continue", or any other message all mean "sweep
-> first". The one exception is a message from the plan session (below):
-> read the change before sweeping. Per stack, from one of its branches:
-> 1. 'gh stack sync --prune' (fetch, fast-forward trunk, cascade-rebase every
->    layer onto its parent, force-with-lease push, sync PR state, drop local
->    branches of merged PRs). If it reports a rebase conflict:
->    'gh stack rebase', resolve, 'gh stack rebase --continue', then
->    'gh stack push'. If the trunk fast-forward is refused because <default>
->    is checked out in the main worktree, run 'git pull --ff-only' there
->    first.
-> 2. Conflicts GitHub sees that the sync did not: for every open layer,
->    'gh pr view <n> --json mergeable,mergeStateStatus'. CONFLICTING (or
->    mergeStateStatus DIRTY) → switch to that branch, rebase it onto its
->    base, resolve, push, then 'gh stack sync' for the layers above. UNKNOWN
->    right after a push is GitHub still computing; check again next sweep.
-> 3. Close merged children, bottom of the stack first. Always name the issue
->    in 'bd close': without an ID it closes the last issue bd touched, which
->    after a 'bd show' of a blocker is the wrong one. 'gh stack view --json',
->    then for each branch with isMerged true whose child is still open,
->    'bd close <child-id> --reason "PR #<n> merged"'. Going bottom-up closes
->    each blocker before the child that depends on it. If bd still refuses
->    with "blocked by open issues": when the blocking sibling's PR has
->    merged too, close that one first; otherwise the merged PR is the source
->    of truth, so 'bd close <child-id> --force --reason "PR #<n> merged"' and leave
->    'bd comment <child-id> "closed with open blocker <blocker title>"'.
-> 4. A PR closed without merge ('gh pr view <n> --json state'): report it to
->    the user; do not guess.
+> **Stack maintenance: the sweep.** A read-only check of the PRs, plus a
+> sync only when the check finds a reason. Run it when you judge the PRs'
+> state matters to what you are about to do or say — not on every turn, so
+> unrelated work stays fast. Typical moments: the user says "merged",
+> "continue", pastes a PR URL, asks for status, or asks for a review fix;
+> a message from the plan session arrives (read the change first, below);
+> right after the build; before the final report; or a while has passed
+> and a merge may have landed unmentioned. When in doubt about state you
+> are about to act on, check. Conflicts need no hunting: the user will
+> point them out, and the check fixes any it happens to see.
 >
-> Open the turn's reply with a one-line sweep result (what merged and was
-> closed, what was rebased, what is mergeable now) before answering the
-> user's message.
+> Never fetch, rebase or push just because the sweep ran: main moves constantly in a busy repo, and rebasing every layer each
+> time would re-run CI on every PR and churn diffs under review.
+>
+> *Check (read-only).* For each open child that has a PR (its
+> external_ref 'gh-<n>'): 'gh pr view <n> --json
+> state,mergeable,mergeStateStatus'. Look up each PR by number; do not list
+> recent PRs and filter, since in a busy repo the latest 100 cover only a
+> day or two. Then, per PR:
+> - MERGED, child still open → close it (below), then sync that stack.
+> - CONFLICTING, or mergeStateStatus DIRTY → sync that stack and resolve.
+> - CLOSED without merge → report it to the user; do not guess.
+> - UNKNOWN (GitHub still computing, e.g. right after a push) → nothing now;
+>   the next check picks it up.
+> - BEHIND alone (main moved, no conflict) is NOT a reason to sync; mention
+>   it only if the user asks or the repo requires up-to-date branches.
+>
+> *Close merged children*, bottom of the stack first. Always name the issue
+> in 'bd close': without an ID it closes the last issue bd touched, which
+> after a 'bd show' of a blocker is the wrong one. For each merged PR whose
+> child is still open: 'bd close <child-id> --reason "PR #<n> merged"'.
+> Going bottom-up closes each blocker before the child that depends on it.
+> If bd still refuses with "blocked by open issues": when the blocking
+> sibling's PR has merged too, close that one first; otherwise the merged PR
+> is the source of truth, so 'bd close <child-id> --force --reason "PR #<n>
+> merged"' and leave 'bd comment <child-id> "closed with open blocker
+> <blocker title>"'.
+>
+> *Sync (only when the check found a merge or a conflict, a plan change was
+> applied, or the user asks).* Per affected stack, from one of its branches:
+> 'gh stack sync --prune' (fetch, fast-forward trunk, cascade-rebase every
+> layer onto its parent, force-with-lease push, sync PR state, drop local
+> branches of merged PRs). If it reports a rebase conflict: 'gh stack
+> rebase', resolve, 'gh stack rebase --continue', then 'gh stack push'. If
+> the trunk fast-forward is refused because <default> is checked out in the
+> main worktree, run 'git pull --ff-only' there first. A conflict GitHub
+> still reports after the sync: switch to that branch, rebase it onto its
+> base, resolve, push, then 'gh stack sync' for the layers above.
+>
+> When a sweep ran, open the reply with a one-line result (what merged and
+> was closed, whether a sync ran and why, what is mergeable now); then
+> answer the user's message.
 >
 > Review comments ('gh pr view <n> --comments') are handled HERE: switch to
 > that child's branch, push fix commits (prefer appending over amending), then
@@ -213,8 +231,8 @@ The implementation mandate (launch prompt), with IDs filled in:
 >
 > **Messages from the plan session** start with '[from plan session]' and
 > name a change tag 'PC-<...>'. They mean the plan or the child graph
-> changed, so do NOT sweep first: the sweep rebases, pushes and closes
-> issues under the old plan. In this order:
+> changed, so do NOT sync or close anything first: that would rebase, push
+> and close issues under the old plan. In this order:
 > 1. Read the change: the epic comment that starts with 'Plan change
 >    PC-<tag>' ('bd comments <epic-id> --json' → .text; 'bd show --json'
 >    leaves comment bodies out), then the epic's design and
@@ -224,8 +242,9 @@ The implementation mandate (launch prompt), with IDs filled in:
 >    go in the stacks, and whether anything already merged conflicts with
 >    it. If the change is unclear or contradicts merged work, ask the user
 >    and stop here.
-> 3. Sweep, skipping what the change makes moot (do not rebase or push a
->    layer that is about to be dropped or rewritten).
+> 3. Run the sweep's check, then close and sync only where the new plan
+>    still holds (do not rebase or push a layer that is about to be dropped
+>    or rewritten).
 > 4. Apply it: new children become new layers on the right stack (or a new
 >    stack), a changed child gets fix commits on its branch, a dropped
 >    child's PR is reported to the user rather than closed on your own.
@@ -251,8 +270,8 @@ The implementation mandate (launch prompt), with IDs filled in:
   (`external_ref` → `gh pr view <n> --json state,baseRefName,reviewDecision`).
   Call out which PR is **mergeable now** (bottom of a stack, approved), which
   are waiting on a lower PR, and whether the stack needs a sync (a PR whose
-  base still points at an already-merged branch). The work session sweeps
-  on every turn, so any message to it fixes that.
+  base still points at an already-merged branch). The work session syncs once
+  its check sees the merge; a "continue" or "merged" to it triggers that.
 - A child PR CLOSED without merge: flag it to the user instead of guessing.
 - All children closed but the epic still open (the work session normally
   closes it; this is the fallback when that session is gone), where the
@@ -315,8 +334,9 @@ carries a fixed one-line nudge:
 ## Division of status updates
 
 - Work session (the wt this skill cuts): per child — in_progress on start,
-  `external_ref` at PR time, `bd close` on merge (its sweep, every turn),
-  plus `gh stack sync` and conflict fixes; closes the epic when the last
+  `external_ref` at PR time, `bd close` on merge (its read-only check, run
+  when it judges PR state matters), plus `gh stack sync` only after a merge, a conflict, or a plan
+  change; closes the epic when the last
   child closes. It is long-lived, so completion state never lives on
   something already deleted.
 - Plan session (`/bd-go` pass): progress reports; fallback for stragglers
