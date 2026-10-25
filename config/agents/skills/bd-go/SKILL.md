@@ -138,24 +138,58 @@ The implementation mandate (launch prompt), with IDs filled in:
 > and pause; on "continue", resume from that child. Once all PRs exist,
 > report every stack in **merge order** (bottom first): child title, PR URL.
 >
-> **Stack maintenance — run the sweep after the build, and whenever the user
-> says to continue.** Per stack, from one of its branches:
-> 'gh stack sync --prune' (fetch, fast-forward trunk, cascade-rebase every
-> layer onto its parent, force-with-lease push, sync PR state, drop local
-> branches of merged PRs). Then 'gh stack view --json': for every branch with
-> isMerged true whose child is still open,
-> 'bd close <child-id> --reason "PR #<n> merged"'. If sync reports a rebase
-> conflict: 'gh stack rebase', resolve, 'gh stack rebase --continue', then
-> 'gh stack push'. If the trunk fast-forward is refused because <default> is
-> checked out in the main worktree, run 'git pull --ff-only' there first.
-> A PR closed without merge ('gh pr view <n> --json state'): report it to the
-> user; do not guess.
+> **Stack maintenance: the sweep.** Run it right after the build, and then
+> at the start of EVERY turn in this session, before anything else the user
+> asked. The user should never have to report a merge or a conflict:
+> "merged", a PR URL, "continue", or any other message all mean "sweep
+> first". Per stack, from one of its branches:
+> 1. 'gh stack sync --prune' (fetch, fast-forward trunk, cascade-rebase every
+>    layer onto its parent, force-with-lease push, sync PR state, drop local
+>    branches of merged PRs). If it reports a rebase conflict:
+>    'gh stack rebase', resolve, 'gh stack rebase --continue', then
+>    'gh stack push'. If the trunk fast-forward is refused because <default>
+>    is checked out in the main worktree, run 'git pull --ff-only' there
+>    first.
+> 2. Conflicts GitHub sees that the sync did not: for every open layer,
+>    'gh pr view <n> --json mergeable,mergeStateStatus'. CONFLICTING (or
+>    mergeStateStatus DIRTY) → switch to that branch, rebase it onto its
+>    base, resolve, push, then 'gh stack sync' for the layers above. UNKNOWN
+>    right after a push is GitHub still computing; check again next sweep.
+> 3. Close merged children, bottom of the stack first: 'gh stack view --json',
+>    then for each branch with isMerged true whose child is still open,
+>    'bd close <child-id> --reason "PR #<n> merged"'. Going bottom-up closes
+>    each blocker before the child that depends on it. If bd still refuses
+>    with "blocked by open issues": when the blocking sibling's PR has
+>    merged too, close that one first; otherwise the merged PR is the source
+>    of truth, so 'bd close --force' the child and leave
+>    'bd comment <child-id> "closed with open blocker <blocker title>"'.
+> 4. A PR closed without merge ('gh pr view <n> --json state'): report it to
+>    the user; do not guess.
+>
+> Open the turn's reply with a one-line sweep result (what merged and was
+> closed, what was rebased, what is mergeable now) before answering the
+> user's message.
+>
 > Review comments ('gh pr view <n> --comments') are handled HERE: switch to
 > that child's branch, push fix commits (prefer appending over amending), then
 > 'gh stack sync' so the layers above are rebased and pushed.
-> Never merge a PR, never 'gh stack merge', never 'gh stack unstack', and
-> never close the epic — the user merges bottom-up; the epic is closed from
-> the plan session at the end.
+>
+> **Finish: close the epic here.** When the sweep leaves no open child (the
+> 'bd list --json --parent <epic-id> --all -n 0' listing is non-empty and
+> every entry is closed):
+> - 'bd close <epic-id> --reason "all child PRs merged"', then drop the
+>   worktree pointers that are about to go stale:
+>   'bd update <epic-id> --unset-metadata plan_worktree --unset-metadata
+>   plan_session --unset-metadata work_worktree --unset-metadata work_session'.
+> - Final report: every child with its merged PR; for each merged PR,
+>   whether its post-merge workflows ran ('gh run list --commit <merge sha>'
+>   — merging a whole stack at once can skip per-PR deploy/apply runs); and
+>   any step the plan says happens after merge (apply, migration, manual
+>   check) that is still to do. Then tell the user both worktrees/sessions
+>   for this epic can be removed.
+>
+> Never merge a PR, never 'gh stack merge', never 'gh stack unstack' — the
+> user merges, bottom-up.
 
 ## Later runs: progress / close
 
@@ -163,11 +197,13 @@ The implementation mandate (launch prompt), with IDs filled in:
   (`external_ref` → `gh pr view <n> --json state,baseRefName,reviewDecision`).
   Call out which PR is **mergeable now** (bottom of a stack, approved), which
   are waiting on a lower PR, and whether the stack needs a sync (a PR whose
-  base still points at an already-merged branch — tell the user to say
-  "continue" in the work session).
+  base still points at an already-merged branch). The work session sweeps
+  on every turn, so any message to it fixes that.
 - A child PR CLOSED without merge: flag it to the user instead of guessing.
-- All children closed (the `--all` listing is non-empty and every entry has
-  status `closed`): `bd close <epic-id>`, drop the worktree pointers that
+- All children closed but the epic still open (the work session normally
+  closes it; this is the fallback when that session is gone), where the
+  `--all` listing is non-empty and every entry has status `closed`:
+  `bd close <epic-id>`, drop the worktree pointers that
   are about to go stale, and tell the user both worktrees/sessions for this
   epic can be removed:
 
@@ -176,18 +212,20 @@ The implementation mandate (launch prompt), with IDs filled in:
     --unset-metadata work_worktree --unset-metadata work_session
   ```
 
-  Closing from here is safe — bd data lives in the main repo's `.beads/` (git
-  common dir) and survives worktree removal. As a fallback, close merged-PR
-  stragglers the work session has not swept.
+  Closing from either worktree is safe — bd data lives in the main repo's
+  `.beads/` (git common dir) and survives worktree removal. Also close
+  merged-PR stragglers the work session has not swept, bottom-up as in the
+  sweep.
 
 ## Division of status updates
 
 - Work session (the wt this skill cuts): per child — in_progress on start,
-  `external_ref` at PR time, `bd close` on merge (its sweep), plus
-  `gh stack sync` after merges and review fixes. It is long-lived, so
-  completion state never lives on something already deleted.
-- Plan session (`/bd-go` pass): progress reports; closes the epic when all
-  children are closed (plus straggler fallback).
+  `external_ref` at PR time, `bd close` on merge (its sweep, every turn),
+  plus `gh stack sync` and conflict fixes; closes the epic when the last
+  child closes. It is long-lived, so completion state never lives on
+  something already deleted.
+- Plan session (`/bd-go` pass): progress reports; fallback for stragglers
+  and for closing the epic if the work session is gone.
 - Nobody merges except the user, bottom of the stack first (`gh stack merge`
   merges atomically up to a chosen PR).
 
