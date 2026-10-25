@@ -23,9 +23,9 @@ create-plan.
 ## Where to run
 
 In the epic's plan worktree (branch `<issue-id>-<slug>-plan`), before
-`/bd-plan`. Derive the issue the same way bd-plan does: the
-`bd list --json | jq -r '.[].id'` entry that is a prefix of
-`git rev-parse --abbrev-ref HEAD`. An explicit issue ID as argument overrides
+`/bd-plan`. Derive the issue from the branch exactly as bd-plan does (its
+"Parent issue" snippet, with `bd list --all -n 0`, since the default list
+stops at 50 open issues). An explicit issue ID as argument overrides
 that. With no issue, research anyway, keep the document in the scratchpad, and
 say that nothing was stored.
 
