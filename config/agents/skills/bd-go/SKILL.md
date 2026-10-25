@@ -142,7 +142,8 @@ The implementation mandate (launch prompt), with IDs filled in:
 > at the start of EVERY turn in this session, before anything else the user
 > asked. The user should never have to report a merge or a conflict:
 > "merged", a PR URL, "continue", or any other message all mean "sweep
-> first". Per stack, from one of its branches:
+> first". The one exception is a message from the plan session (below):
+> read the change before sweeping. Per stack, from one of its branches:
 > 1. 'gh stack sync --prune' (fetch, fast-forward trunk, cascade-rebase every
 >    layer onto its parent, force-with-lease push, sync PR state, drop local
 >    branches of merged PRs). If it reports a rebase conflict:
@@ -197,9 +198,50 @@ The implementation mandate (launch prompt), with IDs filled in:
 >
 > Never merge a PR, never 'gh stack merge', never 'gh stack unstack' — the
 > user merges, bottom-up.
+>
+> **Say where you are.** Start every status report, and any reply after a
+> context compaction, with one line: '[<epic title> / work session /
+> plan: <plan_session>]' (plan_session from the epic's metadata). If you
+> lose track of which epic or session this is, recover it from the
+> worktree's branch and 'bd show <epic-id> --json' → .[0].metadata — never
+> guess.
+>
+> **Messages from the plan session** start with '[from plan session]' and
+> name a change tag 'PC-<...>'. They mean the plan or the child graph
+> changed, so do NOT sweep first: the sweep rebases, pushes and closes
+> issues under the old plan. In this order:
+> 1. Read the change: the epic comment that starts with 'Plan change
+>    PC-<tag>' ('bd comments <epic-id> --json' → .text; 'bd show --json'
+>    leaves comment bodies out), then the epic's design and
+>    'bd list --json --parent <epic-id> --all -n 0'.
+> 2. Work out the impact before touching anything: which open layers it
+>    changes, drops or reorders, which new children it adds and where they
+>    go in the stacks, and whether anything already merged conflicts with
+>    it. If the change is unclear or contradicts merged work, ask the user
+>    and stop here.
+> 3. Sweep, skipping what the change makes moot (do not rebase or push a
+>    layer that is about to be dropped or rewritten).
+> 4. Apply it: new children become new layers on the right stack (or a new
+>    stack), a changed child gets fix commits on its branch, a dropped
+>    child's PR is reported to the user rather than closed on your own.
+> 5. Acknowledge on the epic, so the plan session can tell "sent" from
+>    "applied". The plan session reads the comment's opening words, so
+>    pick them by state:
+>    - every part of the change is done →
+>      'bd comment <epic-id> "Applied plan change PC-<tag>: <what you did>"';
+>    - anything is left (waiting on the user, blocked, still building) →
+>      'bd comment <epic-id> "Plan change PC-<tag> in progress: done <...>;
+>      left <...> because <...>"', and write the 'Applied' comment only
+>      once the rest is done.
+>    Then report it here too.
 
 ## Later runs: progress / close
 
+- Start the report with '[<epic title> / plan session / work:
+  <work_session>]' so the user can tell the two sessions apart.
+- Relayed plan changes not yet fully applied: list each as partially
+  applied (with what is left) or not yet picked up (see "Relay a change to
+  the work session"). Only an `Applied plan change <tag>` comment clears one.
 - Report the stacks — for each, bottom → top: child title, PR state
   (`external_ref` → `gh pr view <n> --json state,baseRefName,reviewDecision`).
   Call out which PR is **mergeable now** (bottom of a stack, approved), which
@@ -224,6 +266,46 @@ The implementation mandate (launch prompt), with IDs filled in:
   `.beads/` (git common dir) and survives worktree removal. Also close
   merged-PR stragglers the work session has not swept, bottom-up as in the
   sweep.
+
+## Relay a change to the work session
+
+When the plan or the child graph changes after the first run (update-plan →
+`/bd-plan` updates, new or dropped children, or the user says to tell the
+work session something), the work session has to hear about it. Never retype
+the change into its input box; the details go through bd, and tmux only
+carries a fixed one-line nudge:
+
+1. Write the change down on the epic, from here, under a fresh tag
+   (`tag=PC-$(date +%Y%m%d-%H%M)`):
+   `bd comment <epic-id> "Plan change $tag: <what changed, which children>"`.
+2. Find the session: `bd show <epic-id> --json` → `.[0].metadata.work_session`.
+   If it is missing or `tmux has-session -t "=<session>"` fails, tell the user
+   the work session is gone and stop.
+3. Look before typing: `tmux capture-pane -p -t "=<session>:" | tail -n 15`.
+   If the claude input box already holds text (the user's unsent draft),
+   do not clear or overwrite it. Tell the user and stop. A claude that is
+   busy is fine: it queues the message for its next turn.
+4. Send the nudge as literal text, then Enter as a separate key:
+
+   ```bash
+   tmux send-keys -t "=<session>:" -l "[from plan session] $tag for epic <epic title>: read the epic comment 'Plan change $tag', check its impact, then sync and apply it."
+   tmux send-keys -t "=<session>:" Enter
+   ```
+
+5. Confirm with `capture-pane` again that the message was submitted (it
+   appears in the transcript, not left in the input box). If it did not go
+   through, say so; do not retry with Escape / C-c / clearing keys. Reading
+   the screen is best-effort, so report only what you saw.
+6. Report two states, never one: **sent** (the nudge was submitted, from
+   step 5) and **applied** (an epic comment whose text starts with
+   `Applied plan change <tag>`). Right after sending, applied is normally
+   still pending. Every later `/bd-go` pass reads `bd comments <epic-id>
+   --json` and, for each `Plan change <tag>:` comment, classifies the tag by
+   the comment texts' opening words: `Applied plan change <tag>` → applied;
+   otherwise the latest `Plan change <tag> in progress` → partially applied,
+   with what is left; nothing → not yet picked up. Only "applied" drops off
+   the list, so a lost or half-done relay shows up instead of passing
+   silently.
 
 ## Division of status updates
 

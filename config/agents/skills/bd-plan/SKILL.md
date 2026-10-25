@@ -101,7 +101,8 @@ plan to bd.
 
 - If the plan changes mid-implementation (clear-plan-skills:update-plan), update
   the epic's design with `--design-file` again and add/close child issues rather
-  than recreating the graph.
+  than recreating the graph. If `/bd-go` has already started the work session,
+  relay the change to it (bd-go "Relay a change to the work session").
 - `bd dep add <issue> <blocker>` adds a dependency after the fact if an ordering
   constraint was missed.
 - Children are closed by the work session when their PR merges, and the epic
