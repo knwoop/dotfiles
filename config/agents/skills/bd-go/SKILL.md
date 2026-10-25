@@ -208,8 +208,9 @@ The implementation mandate (launch prompt), with IDs filled in:
 > **Messages from the plan session** start with '[from plan session]'. They
 > mean the plan or the child graph changed. Sweep first, then re-read the
 > epic's design, 'bd list --json --parent <epic-id> -n 0', and the epic's
-> latest comments ('bd show <epic-id> --json' → .[0].comments), where the
-> plan session wrote what changed. Apply it: new children become new layers
+> latest comments ('bd comments <epic-id> --json' → the last entries'
+> .text; 'bd show --json' leaves comment bodies out), where the plan session
+> wrote what changed. Apply it: new children become new layers
 > on the right stack (or a new stack), a changed child gets fix commits on
 > its branch, a dropped child's PR is reported to the user rather than
 > closed on your own. Then report what you did.
