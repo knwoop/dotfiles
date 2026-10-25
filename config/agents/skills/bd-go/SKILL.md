@@ -225,16 +225,23 @@ The implementation mandate (launch prompt), with IDs filled in:
 >    stack), a changed child gets fix commits on its branch, a dropped
 >    child's PR is reported to the user rather than closed on your own.
 > 5. Acknowledge on the epic, so the plan session can tell "sent" from
->    "applied": 'bd comment <epic-id> "Applied plan change PC-<tag>: <what
->    you did, or what is left and why>"'. Then report it here too.
+>    "applied". The plan session reads the comment's opening words, so
+>    pick them by state:
+>    - every part of the change is done →
+>      'bd comment <epic-id> "Applied plan change PC-<tag>: <what you did>"';
+>    - anything is left (waiting on the user, blocked, still building) →
+>      'bd comment <epic-id> "Plan change PC-<tag> in progress: done <...>;
+>      left <...> because <...>"', and write the 'Applied' comment only
+>      once the rest is done.
+>    Then report it here too.
 
 ## Later runs: progress / close
 
 - Start the report with '[<epic title> / plan session / work:
   <work_session>]' so the user can tell the two sessions apart.
-- Relayed plan changes without an `Applied plan change <tag>` comment yet:
-  list them as sent but not applied (see "Relay a change to the work
-  session").
+- Relayed plan changes not yet fully applied: list each as partially
+  applied (with what is left) or not yet picked up (see "Relay a change to
+  the work session"). Only an `Applied plan change <tag>` comment clears one.
 - Report the stacks — for each, bottom → top: child title, PR state
   (`external_ref` → `gh pr view <n> --json state,baseRefName,reviewDecision`).
   Call out which PR is **mergeable now** (bottom of a stack, approved), which
@@ -290,12 +297,15 @@ carries a fixed one-line nudge:
    through, say so; do not retry with Escape / C-c / clearing keys. Reading
    the screen is best-effort, so report only what you saw.
 6. Report two states, never one: **sent** (the nudge was submitted, from
-   step 5) and **applied** (the work session wrote
-   `Applied plan change <tag>` on the epic). Right after sending, applied is
-   normally still pending. Every later `/bd-go` pass checks
-   `bd comments <epic-id> --json` for each `Plan change <tag>` without a
-   matching `Applied plan change <tag>` and lists those as not yet applied,
-   so a lost relay shows up instead of passing silently.
+   step 5) and **applied** (an epic comment whose text starts with
+   `Applied plan change <tag>`). Right after sending, applied is normally
+   still pending. Every later `/bd-go` pass reads `bd comments <epic-id>
+   --json` and, for each `Plan change <tag>:` comment, classifies the tag by
+   the comment texts' opening words: `Applied plan change <tag>` → applied;
+   otherwise the latest `Plan change <tag> in progress` → partially applied,
+   with what is left; nothing → not yet picked up. Only "applied" drops off
+   the list, so a lost or half-done relay shows up instead of passing
+   silently.
 
 ## Division of status updates
 
