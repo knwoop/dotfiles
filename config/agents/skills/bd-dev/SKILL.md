@@ -7,6 +7,7 @@ description: Cut a beads (bd) issue and its dev environment — nothing more. In
 
 Cut issue + worktree + tmux session — then hand over. This skill does NOT plan or
 implement: the user enters the worktree session and drives from there (typically
+`/bd-research` when the code or data needs investigating first, then
 create-plan → `/bd-plan` to attach the plan and cut child issues).
 
 Beads counterpart of the `issue-dev` skill (Linear) and non-interactive counterpart
@@ -94,7 +95,7 @@ refer to issues by title in questions and reports (IDs may appear alongside, sma
    if ! tmux has-session -t "=$session" 2>/dev/null; then
      tmux new-session -d -s "$session" -c "$dir" -- \
        sh -c 'claude "$1"; exec "$SHELL" -l' sh \
-       "Read beads issue <id> with 'bd show <id> --json' for context, then wait for the user. Do NOT start planning or implementing on your own — the user drives from here (typically create-plan, then /bd-plan to cut child issues under this one, then /bd-go to dispatch them)."
+       "Read beads issue <id> with 'bd show <id> --json' for context, then wait for the user. Do NOT start planning or implementing on your own — the user drives from here (typically /bd-research when investigation is needed, then create-plan, then /bd-plan to cut child issues under this one, then /bd-go to dispatch them)."
    fi
    ```
 
@@ -148,6 +149,7 @@ bd follows it. Who does what:
 
 | Stage | Where | What |
 |---|---|---|
+| Research (optional) | plan worktree (this one) | `/bd-research`: sourced facts + questions for the plan, stored in this issue's notes |
 | Plan | plan worktree (this one) | create-plan → `/bd-plan`: plan onto this issue's design, child issues cut under it |
 | Start | plan worktree, `/bd-go` | cuts the work worktree + session, launches the implementer |
 | Implement | work worktree session | ALL children built in one go as a `gh stack` stack (dependency graph linearized; one branch `<child-id>-<slug>` + one PR per child, each layer based on the one below); in_progress + external-ref per child |
