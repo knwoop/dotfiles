@@ -197,9 +197,27 @@ The implementation mandate (launch prompt), with IDs filled in:
 >
 > Never merge a PR, never 'gh stack merge', never 'gh stack unstack' — the
 > user merges, bottom-up.
+>
+> **Say where you are.** Start every status report, and any reply after a
+> context compaction, with one line: '[<epic title> / work session /
+> plan: <plan_session>]' (plan_session from the epic's metadata). If you
+> lose track of which epic or session this is, recover it from the
+> worktree's branch and 'bd show <epic-id> --json' → .[0].metadata — never
+> guess.
+>
+> **Messages from the plan session** start with '[from plan session]'. They
+> mean the plan or the child graph changed. Sweep first, then re-read the
+> epic's design, 'bd list --json --parent <epic-id> -n 0', and the epic's
+> latest comments ('bd show <epic-id> --json' → .[0].comments), where the
+> plan session wrote what changed. Apply it: new children become new layers
+> on the right stack (or a new stack), a changed child gets fix commits on
+> its branch, a dropped child's PR is reported to the user rather than
+> closed on your own. Then report what you did.
 
 ## Later runs: progress / close
 
+- Start the report with '[<epic title> / plan session / work:
+  <work_session>]' so the user can tell the two sessions apart.
 - Report the stacks — for each, bottom → top: child title, PR state
   (`external_ref` → `gh pr view <n> --json state,baseRefName,reviewDecision`).
   Call out which PR is **mergeable now** (bottom of a stack, approved), which
@@ -224,6 +242,35 @@ The implementation mandate (launch prompt), with IDs filled in:
   `.beads/` (git common dir) and survives worktree removal. Also close
   merged-PR stragglers the work session has not swept, bottom-up as in the
   sweep.
+
+## Relay a change to the work session
+
+When the plan or the child graph changes after the first run (update-plan →
+`/bd-plan` updates, new or dropped children, or the user says to tell the
+work session something), the work session has to hear about it. Never retype
+the change into its input box; the details go through bd, and tmux only
+carries a fixed one-line nudge:
+
+1. Write the change down on the epic, from here:
+   `bd comment <epic-id> "Plan change: <what changed, which children>"`.
+2. Find the session: `bd show <epic-id> --json` → `.[0].metadata.work_session`.
+   If it is missing or `tmux has-session -t "=<session>"` fails, tell the user
+   the work session is gone and stop.
+3. Look before typing: `tmux capture-pane -p -t "=<session>:" | tail -n 15`.
+   If the claude input box already holds text (the user's unsent draft),
+   do not clear or overwrite it. Tell the user and stop. A claude that is
+   busy is fine: it queues the message for its next turn.
+4. Send the nudge as literal text, then Enter as a separate key:
+
+   ```bash
+   tmux send-keys -t "=<session>:" -l "[from plan session] Plan changed for epic <epic title>: read the latest epic comment and re-read the design and children, then continue."
+   tmux send-keys -t "=<session>:" Enter
+   ```
+
+5. Confirm with `capture-pane` again that the message was submitted (it
+   appears in the transcript, not left in the input box), and tell the user
+   it was relayed. If it did not go through, say so; do not retry with
+   Escape / C-c / clearing keys.
 
 ## Division of status updates
 

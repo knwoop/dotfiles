@@ -95,7 +95,7 @@ refer to issues by title in questions and reports (IDs may appear alongside, sma
    if ! tmux has-session -t "=$session" 2>/dev/null; then
      tmux new-session -d -s "$session" -c "$dir" -- \
        sh -c 'claude "$1"; exec "$SHELL" -l' sh \
-       "Read beads issue <id> with 'bd show <id> --json' for context, then wait for the user. Do NOT start planning or implementing on your own — the user drives from here (typically /bd-research when investigation is needed, then create-plan, then /bd-plan to cut child issues under this one, then /bd-go to dispatch them)."
+       "Read beads issue <id> with 'bd show <id> --json' for context, then wait for the user. Do NOT start planning or implementing on your own — the user drives from here (typically /bd-research when investigation is needed, then create-plan, then /bd-plan to cut child issues under this one, then /bd-go to dispatch them). Start every status report, and any reply after a context compaction, with '[<issue title> / plan session]' (add ' / work: <work_session>' once the issue's metadata has one); if you lose track of which issue this is, recover it from the branch and 'bd show <id> --json', never guess."
    fi
    ```
 
