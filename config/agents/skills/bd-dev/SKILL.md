@@ -157,7 +157,8 @@ own because the task looks small.
 3. Open one PR from that branch (`/ship` or `gh pr create`), then record it:
    `bd update <id> --external-ref gh-<n>` and `bd comment <id> "PR #<n>"`.
 4. Review comments are handled here: push fix commits on the same branch.
-5. At the start of every later turn, check the PR
+5. Whenever PR state matters (the user mentions it, before reporting, or a
+   while has passed), check the PR
    (`gh pr view <n> --json state,mergeable,mergeStateStatus`), the same way
    the work session sweeps: rebase and push on conflict; MERGED → check
    post-merge runs (`gh run list --commit <merge sha>`) and any step the
@@ -215,7 +216,7 @@ bd follows it. Who does what:
 | Implement | work worktree session | ALL children built in one go as a `gh stack` stack (dependency graph linearized; one branch `<child-id>-<slug>` + one PR per child, each layer based on the one below); in_progress + external-ref per child |
 | Review | **same work session** | address PR comments on the child's branch, push fixes, `gh stack sync` to rebase the layers above |
 | Merge | the user | bottom of the stack first (GitHub stack UI or `gh stack merge`); never merge from a session |
-| Close children | work session sweep, every turn | `gh stack sync --prune`, conflict check, then `bd close <child-id> --reason "PR #<n> merged"` for merged layers, bottom-up |
+| Close children | work session sweep (when it judges PR state matters) | read-only PR check; `bd close <child-id> --reason "PR #<n> merged"` for merged layers, bottom-up; `gh stack sync --prune` only after a merge or conflict |
 | Close epic | work session (fallback: plan worktree, `/bd-go` pass) | `bd close <epic-id>` + unset worktree metadata when the last child closes |
 | Small task (user's call) | plan worktree only | `delivery=direct`: one PR from the `-plan` branch, closed by this session when it merges (see "Small tasks") |
 
