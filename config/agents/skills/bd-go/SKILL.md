@@ -142,7 +142,8 @@ The implementation mandate (launch prompt), with IDs filled in:
 > at the start of EVERY turn in this session, before anything else the user
 > asked. The user should never have to report a merge or a conflict:
 > "merged", a PR URL, "continue", or any other message all mean "sweep
-> first". Per stack, from one of its branches:
+> first". The one exception is a message from the plan session (below):
+> read the change before sweeping. Per stack, from one of its branches:
 > 1. 'gh stack sync --prune' (fetch, fast-forward trunk, cascade-rebase every
 >    layer onto its parent, force-with-lease push, sync PR state, drop local
 >    branches of merged PRs). If it reports a rebase conflict:
@@ -205,20 +206,35 @@ The implementation mandate (launch prompt), with IDs filled in:
 > worktree's branch and 'bd show <epic-id> --json' → .[0].metadata — never
 > guess.
 >
-> **Messages from the plan session** start with '[from plan session]'. They
-> mean the plan or the child graph changed. Sweep first, then re-read the
-> epic's design, 'bd list --json --parent <epic-id> -n 0', and the epic's
-> latest comments ('bd comments <epic-id> --json' → the last entries'
-> .text; 'bd show --json' leaves comment bodies out), where the plan session
-> wrote what changed. Apply it: new children become new layers
-> on the right stack (or a new stack), a changed child gets fix commits on
-> its branch, a dropped child's PR is reported to the user rather than
-> closed on your own. Then report what you did.
+> **Messages from the plan session** start with '[from plan session]' and
+> name a change tag 'PC-<...>'. They mean the plan or the child graph
+> changed, so do NOT sweep first: the sweep rebases, pushes and closes
+> issues under the old plan. In this order:
+> 1. Read the change: the epic comment that starts with 'Plan change
+>    PC-<tag>' ('bd comments <epic-id> --json' → .text; 'bd show --json'
+>    leaves comment bodies out), then the epic's design and
+>    'bd list --json --parent <epic-id> --all -n 0'.
+> 2. Work out the impact before touching anything: which open layers it
+>    changes, drops or reorders, which new children it adds and where they
+>    go in the stacks, and whether anything already merged conflicts with
+>    it. If the change is unclear or contradicts merged work, ask the user
+>    and stop here.
+> 3. Sweep, skipping what the change makes moot (do not rebase or push a
+>    layer that is about to be dropped or rewritten).
+> 4. Apply it: new children become new layers on the right stack (or a new
+>    stack), a changed child gets fix commits on its branch, a dropped
+>    child's PR is reported to the user rather than closed on your own.
+> 5. Acknowledge on the epic, so the plan session can tell "sent" from
+>    "applied": 'bd comment <epic-id> "Applied plan change PC-<tag>: <what
+>    you did, or what is left and why>"'. Then report it here too.
 
 ## Later runs: progress / close
 
 - Start the report with '[<epic title> / plan session / work:
   <work_session>]' so the user can tell the two sessions apart.
+- Relayed plan changes without an `Applied plan change <tag>` comment yet:
+  list them as sent but not applied (see "Relay a change to the work
+  session").
 - Report the stacks — for each, bottom → top: child title, PR state
   (`external_ref` → `gh pr view <n> --json state,baseRefName,reviewDecision`).
   Call out which PR is **mergeable now** (bottom of a stack, approved), which
@@ -252,8 +268,9 @@ work session something), the work session has to hear about it. Never retype
 the change into its input box; the details go through bd, and tmux only
 carries a fixed one-line nudge:
 
-1. Write the change down on the epic, from here:
-   `bd comment <epic-id> "Plan change: <what changed, which children>"`.
+1. Write the change down on the epic, from here, under a fresh tag
+   (`tag=PC-$(date +%Y%m%d-%H%M)`):
+   `bd comment <epic-id> "Plan change $tag: <what changed, which children>"`.
 2. Find the session: `bd show <epic-id> --json` → `.[0].metadata.work_session`.
    If it is missing or `tmux has-session -t "=<session>"` fails, tell the user
    the work session is gone and stop.
@@ -264,14 +281,21 @@ carries a fixed one-line nudge:
 4. Send the nudge as literal text, then Enter as a separate key:
 
    ```bash
-   tmux send-keys -t "=<session>:" -l "[from plan session] Plan changed for epic <epic title>: read the latest epic comment and re-read the design and children, then continue."
+   tmux send-keys -t "=<session>:" -l "[from plan session] $tag for epic <epic title>: read the epic comment 'Plan change $tag', check its impact, then sync and apply it."
    tmux send-keys -t "=<session>:" Enter
    ```
 
 5. Confirm with `capture-pane` again that the message was submitted (it
-   appears in the transcript, not left in the input box), and tell the user
-   it was relayed. If it did not go through, say so; do not retry with
-   Escape / C-c / clearing keys.
+   appears in the transcript, not left in the input box). If it did not go
+   through, say so; do not retry with Escape / C-c / clearing keys. Reading
+   the screen is best-effort, so report only what you saw.
+6. Report two states, never one: **sent** (the nudge was submitted, from
+   step 5) and **applied** (the work session wrote
+   `Applied plan change <tag>` on the epic). Right after sending, applied is
+   normally still pending. Every later `/bd-go` pass checks
+   `bd comments <epic-id> --json` for each `Plan change <tag>` without a
+   matching `Applied plan change <tag>` and lists those as not yet applied,
+   so a lost relay shows up instead of passing silently.
 
 ## Division of status updates
 
