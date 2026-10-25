@@ -167,9 +167,27 @@ own because the task looks small.
    then tell the user the worktree/session can be removed. CLOSED without
    merge → report it, do not guess.
 6. If the task turns out to need more than one PR or a real design choice,
-   stop and say so. The user can switch back to the normal path (create-plan
-   → `/bd-plan` → `/bd-go`); drop the marker first with
-   `bd update <id> --unset-metadata delivery`.
+   stop and say so. Before any switch, show what already exists: the
+   commits on this branch that are not on the default branch
+   (`git log --oneline <default>..HEAD`) and the PR, if one is open. `/bd-go`
+   builds every child from the default branch, so these commits are lost
+   unless the user decides where they go. Ask which of these to do:
+   - **Ship what is done, plan the rest separately**: narrow this PR to the
+     finished part and keep this issue on the direct path. The remaining
+     work becomes a new issue (`/bd-dev`), planned and built the normal way
+     once this PR has merged.
+   - **Carry the commits into the plan**: go create-plan → `/bd-plan` on this
+     issue, and name the child the commits belong to. Then
+     `bd comment <child-id> "Carry over: <sha>..<sha> from <plan branch>"`
+     (`bd-go`'s work session cherry-picks them onto that child's branch
+     first). Close the old PR without merging, with a comment saying the
+     child's PR replaces it, and clear `external_ref` on this issue.
+   - **Drop the commits**: start the plan from the default branch. Close the
+     PR without merging, and clear `external_ref`.
+
+   Only then drop the marker (`bd update <id> --unset-metadata delivery`)
+   and continue on the normal path. Never reset or force-push the plan
+   branch to make the switch; the commits stay there for the cherry-pick.
 
 Never merge the PR yourself.
 
