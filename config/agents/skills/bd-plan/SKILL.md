@@ -104,6 +104,7 @@ plan to bd.
   than recreating the graph.
 - `bd dep add <issue> <blocker>` adds a dependency after the fact if an ordering
   constraint was missed.
-- Children are closed by the work session when their PR merges, and the epic by
-  a `/bd-go` pass in this plan worktree once every child is closed (see the
-  bd-dev "Issue lifecycle" section). Never close them from here at plan time.
+- Children are closed by the work session when their PR merges, and the epic
+  by the same session once the last child closes (a `/bd-go` pass here is the
+  fallback); see the bd-dev "Issue lifecycle" section. Never close them from
+  here at plan time.

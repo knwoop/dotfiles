@@ -138,8 +138,8 @@ refer to issues by title in questions and reports (IDs may appear alongside, sma
    Claude's Bash cannot switch the user's tmux client, so only present the commands.
    Remind the user: plan inside the session (`/bd-plan` uses this issue as the
    parent), `/bd-go` later starts implementation from it, and issues close as
-   PRs merge: children by the work session, the epic by a `/bd-go` pass in the
-   plan session (see "Issue lifecycle").
+   PRs merge: children and then the epic by the work session, with a `/bd-go`
+   pass in the plan session as the fallback (see "Issue lifecycle").
 
 ## Issue lifecycle
 
@@ -156,8 +156,8 @@ bd follows it. Who does what:
 | Implement | work worktree session | ALL children built in one go as a `gh stack` stack (dependency graph linearized; one branch `<child-id>-<slug>` + one PR per child, each layer based on the one below); in_progress + external-ref per child |
 | Review | **same work session** | address PR comments on the child's branch, push fixes, `gh stack sync` to rebase the layers above |
 | Merge | the user | bottom of the stack first (GitHub stack UI or `gh stack merge`); never merge from a session |
-| Close children | work session sweep | `gh stack sync --prune`, then `bd close <child-id> --reason "PR #<n> merged"` for merged layers |
-| Close epic | plan worktree, `/bd-go` pass | `bd close <epic-id>` when all children are closed |
+| Close children | work session sweep, every turn | `gh stack sync --prune`, conflict check, then `bd close <child-id> --reason "PR #<n> merged"` for merged layers, bottom-up |
+| Close epic | work session (fallback: plan worktree, `/bd-go` pass) | `bd close <epic-id>` + unset worktree metadata when the last child closes |
 
 - Issues stay `in_progress` through review. There is no built-in "in review"
   status (open / in_progress / blocked / deferred / closed), and a custom one is
