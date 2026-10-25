@@ -116,8 +116,9 @@ The implementation mandate (launch prompt), with IDs filled in:
 >    'gh stack rebase' once so the trunk is fast-forwarded to origin. Later
 >    children: 'gh stack top && gh stack add <child-branch>' (a new layer on
 >    the current top). 'bd update <child-id> --status in_progress'.
->    If the child has a 'Carry over: <range> from <branch>' comment
->    ('bd comments <child-id> --json'), cherry-pick that range onto the new
+>    If the child has a 'Carry over: <sha> <sha> ...' comment
+>    ('bd comments <child-id> --json'), cherry-pick exactly those commits,
+>    in the listed order ('git cherry-pick <sha> <sha> ...'), onto the new
 >    branch first (the commits come from a small task that grew into this
 >    epic) and resolve any conflict before building the rest of the child.
 > 2. Implement and commit on that branch.

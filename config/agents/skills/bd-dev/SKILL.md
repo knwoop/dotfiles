@@ -177,11 +177,20 @@ own because the task looks small.
      work becomes a new issue (`/bd-dev`), planned and built the normal way
      once this PR has merged.
    - **Carry the commits into the plan**: go create-plan → `/bd-plan` on this
-     issue, and name the child the commits belong to. Then
-     `bd comment <child-id> "Carry over: <sha>..<sha> from <plan branch>"`
+     issue, and name the child the commits belong to. Then record them as
+     full SHAs, oldest first, never as an `A..B` range (`A..B` leaves out `A`,
+     so the first commit would be lost, and a single commit would give an
+     empty range):
+
+     ```bash
+     shas=$(git rev-list --reverse <default>..HEAD | tr '\n' ' ')
+     bd comment <child-id> "Carry over: $shas"
+     ```
+
      (`bd-go`'s work session cherry-picks them onto that child's branch
-     first). Close the old PR without merging, with a comment saying the
-     child's PR replaces it, and clear `external_ref` on this issue.
+     first). If only some of them belong to that child, list just those.
+     Close the old PR without merging, with a comment saying the child's PR
+     replaces it, and clear `external_ref` on this issue.
    - **Drop the commits**: start the plan from the default branch. Close the
      PR without merging, and clear `external_ref`.
 
