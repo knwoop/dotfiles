@@ -19,6 +19,10 @@ and open it in the browser. Read-only: never edit, move or delete the files.
    - In a git repo, `git status --porcelain` is a cross-check only: it also
      shows the user's own changes, which are not part of this session unless
      you touched them.
+   - Skip text written only to feed another tool, such as a GitHub PR or
+     issue description, commit message or PR comment body (e.g. a file
+     passed to `gh pr create --body-file`). It is published elsewhere, not
+     a document to read here.
    - Keep only files that still exist. Use absolute paths. Deduplicate.
    - If there are none, say so and stop. Do not fall back to "all Markdown in
      the repo".
