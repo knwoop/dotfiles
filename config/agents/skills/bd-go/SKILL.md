@@ -107,8 +107,14 @@ The implementation mandate (launch prompt), with IDs filled in:
 > dependency graph and order each component topologically — that order is
 > one stack (siblings that are independent inside a component simply get
 > stacked in that order). Each component is its own stack. Branch names:
-> '<child-id>-<child-slug>' (ASCII slug from the child's title). Never build
-> on the -work branch — it is parking only.
+> '<epic-id>-<child-hash>-<child-slug>', where <child-hash> is the child's
+> id without the '<project>-' prefix and <child-slug> is an ASCII slug of
+> its title (epic kauche-app-xtjxw, child kauche-app-evgms →
+> 'kauche-app-xtjxw-evgms-<slug>'). Every branch of the epic then starts
+> with the epic id, so from a PR's branch alone the user can tell which
+> epic, and so which work session ('<repo>/<epic-hash>-<slug>-work'), owns
+> it; bd-plan's parent lookup also resolves any of them to the epic. Never
+> build on the -work branch — it is parking only.
 >
 > **Per stack, per child, in that order:**
 > 1. First child of a stack: 'gh stack init --base <default> <child-branch>'
