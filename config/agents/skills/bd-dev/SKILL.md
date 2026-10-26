@@ -213,7 +213,7 @@ bd follows it. Who does what:
 | Research (optional) | plan worktree (this one) | `/bd-research`: sourced facts + questions for the plan, stored in this issue's notes |
 | Plan | plan worktree (this one) | create-plan → `/bd-plan`: plan onto this issue's design, child issues cut under it |
 | Start | plan worktree, `/bd-go` | cuts the work worktree + session, launches the implementer |
-| Implement | work worktree session | ALL children built in one go as a `gh stack` stack (dependency graph linearized; one branch `<child-id>-<slug>` + one PR per child, each layer based on the one below); in_progress + external-ref per child |
+| Implement | work worktree session | ALL children built in one go as a `gh stack` stack (dependency graph linearized; one branch `<epic-id>-<child-hash>-<slug>` + one PR per child, each layer based on the one below); in_progress + external-ref per child |
 | Review | **same work session** | address PR comments on the child's branch, push fixes, `gh stack sync` to rebase the layers above |
 | Merge | the user | bottom of the stack first (GitHub stack UI or `gh stack merge`); never merge from a session |
 | Close children | work session sweep (when it judges PR state matters) | read-only PR check; `bd close <child-id> --reason "PR #<n> merged"` for merged layers, bottom-up; `gh stack sync --prune` only after a merge or conflict |
