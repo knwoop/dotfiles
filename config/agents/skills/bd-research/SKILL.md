@@ -125,30 +125,35 @@ anything that writes outside the scratchpad while researching.
    <The answer to the question, as facts. 3–6 bullets. No recommendation.>
 
    ## Findings (required)
+   <One Mermaid flowchart of the areas: components as nodes, how they
+   connect as labeled edges.>
    ### <Area>
-   <What exists, where (`path:line`), how it connects to other areas.>
+   <Table: what | where (`path:line`) | connects to. At most a line or two
+   of prose under it.>
 
    ## Flow (optional)
-   <The request / data / control path as numbered steps with `path:line`.>
+   <Mermaid sequenceDiagram (or flowchart) of the request / data / control
+   path, `path:line` on each step.>
 
    ## Observed data (optional)
-   <Numbers from production, each with query, environment, time range.>
+   <Table: metric | value | query | environment | time range.>
 
    ## External specs (optional)
-   <Quoted passages (original + translation) with URLs; limits and quotas.>
+   <Quoted passages (original + translation) with URLs; limits and quotas
+   as a table.>
 
    ## Conventions (required; write "none found" if so)
-   <How this repo already does similar things — features, tests, error
-   handling, generated files — with `path:line` examples.>
+   <Table: concern (feature layout, tests, error handling, generated
+   files, ...) | how this repo does it | `path:line` example.>
 
    ## Constraints (optional)
-   <Facts the plan must respect and their direct consequences: ordering,
-   limits, compatibility, cost. No "therefore do X".>
+   <Table: constraint | source | direct consequence. No "therefore do X".>
 
    ## Questions for the plan (required)
-   <Each decision the plan has to make, phrased as a question, with the
-   options that exist and the facts bearing on each. No pick. Then what
-   could not be determined, and who could answer it.>
+   <Per question: the question as a `###` heading, then a table of
+   options | facts for | facts against, each fact with its source. No pick,
+   no ranking. Then a table of what could not be determined | who could
+   answer it.>
 
    ## Out of scope findings (optional)
    <Things noticed along the way that belong to another issue.>
@@ -156,6 +161,17 @@ anything that writes outside the scratchpad while researching.
    ## Sources (required)
    <URLs, PRs, queries.>
    ```
+
+   **Diagrams and tables first, prose last.** The reader should get the
+   shape at a glance and drop into text only for detail. Anything with
+   structure goes in a picture: connections and paths as Mermaid
+   (`flowchart`, `sequenceDiagram`, `stateDiagram`), comparisons and lists
+   of facts as tables. Prose is for what neither can carry, a sentence or
+   two per block. Keep each diagram small enough to read without zooming
+   (about 12 nodes; split it otherwise), and give every node or edge that
+   states a fact a `path:line` in its label or in the table under it. A
+   diagram is a claim like any other: verify it in step 4, and never draw a
+   preferred option highlighted.
 
    Keep it short enough for the user to read in a few minutes, around 200
    lines at most. It is also the input to planning, so leave out noise.
