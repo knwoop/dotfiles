@@ -72,3 +72,7 @@ export PATH="${AQUA_ROOT_DIR:-$XDG_DATA_HOME/aquaproj-aqua}/bin:$PATH"
 
 # uv
 export PATH="/Users/knwoop/.local/share/../bin:$PATH"
+
+# Homebrew for non-interactive shells too (`ssh host cmd`, mosh starting
+# mosh-server over ssh); .zshrc rebuilds PATH for interactive ones.
+path+=(/opt/homebrew/bin(N-/))
