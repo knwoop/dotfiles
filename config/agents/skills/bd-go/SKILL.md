@@ -88,8 +88,9 @@ small).
    to a child branch per PR.
 4. Report the session + connect commands (`tmux switch-client` /
    `tmux attach`); remind the user that progress checks happen here via
-   `/bd-go`, review is handled in the work session, and PRs are merged
-   bottom-up (GitHub's stack UI or `gh stack merge`).
+   `/bd-go`, the stack is reviewed here with `/bd-review` once its PRs are
+   up, fixes (review findings and PR comments) happen in the work session,
+   and PRs are merged bottom-up (GitHub's stack UI or `gh stack merge`).
 
 The implementation mandate (launch prompt), with IDs filled in:
 
@@ -181,6 +182,11 @@ The implementation mandate (launch prompt), with IDs filled in:
 > after a 'bd show' of a blocker is the wrong one. For each merged PR whose
 > child is still open: 'bd close <child-id> --reason "PR #<n> merged"'.
 > Going bottom-up closes each blocker before the child that depends on it.
+> Before closing a merged child, move its unresolved /bd-review findings
+> ('bd list --json --parent <child-id> --label review --status
+> open,in_progress -n 0') under the epic ('bd update <finding-id> --parent
+> <epic-id>' and 'bd label add <finding-id> moved'); they become new
+> children, built as new layers.
 > If bd still refuses with "blocked by open issues": when the blocking
 > sibling's PR has merged too, close that one first; otherwise the merged PR
 > is the source of truth, so 'bd close <child-id> --force --reason "PR #<n>
@@ -204,7 +210,10 @@ The implementation mandate (launch prompt), with IDs filled in:
 >
 > Review comments ('gh pr view <n> --comments') are handled HERE: switch to
 > that child's branch, push fix commits (prefer appending over amending), then
-> 'gh stack sync' so the layers above are rebased and pushed.
+> 'gh stack sync' so the layers above are rebased and pushed. /bd-review
+> findings are bd issues under a child, labelled 'review' (a
+> '[from plan session] Review RV-<...>' message announces a round): follow
+> 'Apply a review' in ~/.agents/skills/bd-review/SKILL.md.
 >
 > **Finish: close the epic here — post-merge work first.** When the sweep
 > leaves no open child (the 'bd list --json --parent <epic-id> --all -n 0'
@@ -272,6 +281,8 @@ The implementation mandate (launch prompt), with IDs filled in:
 - Relayed plan changes not yet fully applied: list each as partially
   applied (with what is left) or not yet picked up (see "Relay a change to
   the work session"). Only an `Applied plan change <tag>` comment clears one.
+  Also list unresolved `/bd-review` findings (bd issues labelled `review`
+  under this epic or its children, open or in progress), by child.
 - Report the stacks — for each, bottom → top: child title, PR state
   (`external_ref` → `gh pr view <n> --json state,baseRefName,reviewDecision`).
   Call out which PR is **mergeable now** (bottom of a stack, approved), which
@@ -365,5 +376,5 @@ carries a fixed one-line nudge:
   interactive in a TTY — always pass `--auto` (`--open` for ready-for-review,
   otherwise PRs are drafts); `sync` aborts instead of prompting when local
   and remote stacks diverge — report that to the user.
-- Keep `bd-dev`, `bd-research`, `bd-plan`, and this skill in sync — they share branch/session
+- Keep `bd-dev`, `bd-research`, `bd-plan`, `bd-review`, and this skill in sync — they share branch/session
   conventions and the lifecycle.

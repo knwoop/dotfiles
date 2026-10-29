@@ -93,8 +93,8 @@ plan to bd.
    - Next step: `/bd-go` in THIS session. It cuts the single work worktree
      where an implementing claude builds every child in dependency order as a
      `gh stack` stack of PRs, without waiting for merges; this plan worktree stays
-     the place for progress checks. The
-     lifecycle (PR / review / close) follows the bd-dev skill's
+     the place for progress checks, and for `/bd-review` once the PRs are
+     up. The lifecycle (PR / review / close) follows the bd-dev skill's
      "Issue lifecycle" section.
 
 ## Notes
@@ -109,3 +109,5 @@ plan to bd.
   by the same session once the last child closes (a `/bd-go` pass here is the
   fallback); see the bd-dev "Issue lifecycle" section. Never close them from
   here at plan time.
+- Keep `bd-dev`, `bd-research`, `bd-go`, `bd-review`, and this skill in sync.
+  They share branch/session conventions and the lifecycle.
