@@ -232,5 +232,5 @@ research is stored, store it again only when the user accepts the revision.
   to trust. If the code changed since its commit, say so.
 - Research does not change the issue's type or status and cuts no children.
   That is bd-plan's job.
-- Keep `bd-dev`, `bd-research`, `bd-plan`, and `bd-go` in sync. They share
+- Keep `bd-dev`, `bd-research`, `bd-plan`, `bd-go`, and `bd-review` in sync. They share
   branch/session conventions and the lifecycle.

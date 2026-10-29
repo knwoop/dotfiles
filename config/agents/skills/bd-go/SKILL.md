@@ -181,6 +181,10 @@ The implementation mandate (launch prompt), with IDs filled in:
 > after a 'bd show' of a blocker is the wrong one. For each merged PR whose
 > child is still open: 'bd close <child-id> --reason "PR #<n> merged"'.
 > Going bottom-up closes each blocker before the child that depends on it.
+> Before closing a merged child, move its open /bd-review findings
+> ('bd list --json --parent <child-id> --label review --status open -n 0')
+> under the epic ('bd update <finding-id> --parent <epic-id>'); they become
+> new children, built as new layers.
 > If bd still refuses with "blocked by open issues": when the blocking
 > sibling's PR has merged too, close that one first; otherwise the merged PR
 > is the source of truth, so 'bd close <child-id> --force --reason "PR #<n>
@@ -204,7 +208,10 @@ The implementation mandate (launch prompt), with IDs filled in:
 >
 > Review comments ('gh pr view <n> --comments') are handled HERE: switch to
 > that child's branch, push fix commits (prefer appending over amending), then
-> 'gh stack sync' so the layers above are rebased and pushed.
+> 'gh stack sync' so the layers above are rebased and pushed. /bd-review
+> findings are bd issues under a child, labelled 'review' (a
+> '[from plan session] Review RV-<...>' message announces a round): follow
+> 'Apply a review' in ~/.agents/skills/bd-review/SKILL.md.
 >
 > **Finish: close the epic here — post-merge work first.** When the sweep
 > leaves no open child (the 'bd list --json --parent <epic-id> --all -n 0'
@@ -272,6 +279,8 @@ The implementation mandate (launch prompt), with IDs filled in:
 - Relayed plan changes not yet fully applied: list each as partially
   applied (with what is left) or not yet picked up (see "Relay a change to
   the work session"). Only an `Applied plan change <tag>` comment clears one.
+  Also list open `/bd-review` findings (bd issues labelled `review` under
+  this epic's children that are still open), by child.
 - Report the stacks — for each, bottom → top: child title, PR state
   (`external_ref` → `gh pr view <n> --json state,baseRefName,reviewDecision`).
   Call out which PR is **mergeable now** (bottom of a stack, approved), which
@@ -365,5 +374,5 @@ carries a fixed one-line nudge:
   interactive in a TTY — always pass `--auto` (`--open` for ready-for-review,
   otherwise PRs are drafts); `sync` aborts instead of prompting when local
   and remote stacks diverge — report that to the user.
-- Keep `bd-dev`, `bd-research`, `bd-plan`, and this skill in sync — they share branch/session
+- Keep `bd-dev`, `bd-research`, `bd-plan`, `bd-review`, and this skill in sync — they share branch/session
   conventions and the lifecycle.

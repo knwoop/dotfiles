@@ -8,7 +8,8 @@ description: Cut a beads (bd) issue and its dev environment — nothing more. In
 Cut issue + worktree + tmux session — then hand over. This skill does NOT plan or
 implement: the user enters the worktree session and drives from there (typically
 `/bd-research` when the code or data needs investigating first, then
-create-plan → `/bd-plan` to attach the plan and cut child issues).
+create-plan → `/bd-plan` to attach the plan and cut child issues, `/bd-go` to
+build them, and `/bd-review` to review the PRs before merging).
 
 Beads counterpart of the `issue-dev` skill (Linear) and non-interactive counterpart
 of the user's `bd-dev` zsh function (`~/.config/zsh/.zshrc`). Worktree creation uses
@@ -157,6 +158,7 @@ own because the task looks small.
 3. Open one PR from that branch (`/ship` or `gh pr create`), then record it:
    `bd update <id> --external-ref gh-<n>` and `bd comment <id> "PR #<n>"`.
 4. Review comments are handled here: push fix commits on the same branch.
+   `/bd-review` works on this PR too and leaves its findings here to fix.
 5. Whenever PR state matters (the user mentions it, before reporting, or a
    while has passed), check the PR
    (`gh pr view <n> --json state,mergeable,mergeStateStatus`), the same way
@@ -214,7 +216,8 @@ bd follows it. Who does what:
 | Plan | plan worktree (this one) | create-plan → `/bd-plan`: plan onto this issue's design, child issues cut under it |
 | Start | plan worktree, `/bd-go` | cuts the work worktree + session, launches the implementer |
 | Implement | work worktree session | ALL children built in one go as a `gh stack` stack (dependency graph linearized; one branch `<epic-id>-<child-hash>-<slug>` + one PR per child, each layer based on the one below); in_progress + external-ref per child |
-| Review | **same work session** | address PR comments on the child's branch, push fixes, `gh stack sync` to rebase the layers above |
+| Review (optional) | plan worktree, `/bd-review` | read-only sub-agents review every open PR (plan conformance, correctness, tests, security); accepted findings go to bd and are relayed to the work session; nothing posted on GitHub |
+| Fix | **same work session** | address `/bd-review` findings and PR comments on the child's branch, push fixes, `gh stack sync` to rebase the layers above |
 | Merge | the user | bottom of the stack first (GitHub stack UI or `gh stack merge`); never merge from a session |
 | Close children | work session sweep (when it judges PR state matters) | read-only PR check; `bd close <child-id> --reason "PR #<n> merged"` for merged layers, bottom-up; `gh stack sync --prune` only after a merge or conflict |
 | Close epic | work session (fallback: plan worktree, `/bd-go` pass) | `bd close <epic-id>` + unset worktree metadata when the last child closes |
