@@ -1,3 +1,7 @@
+---
+model: sonnet
+---
+
 # Lens: correctness
 
 Label: `correctness`. Scope: each open PR, its own layer's diff, read

@@ -63,18 +63,26 @@ title (IDs may appear alongside, small).
 
 2. **Fan out read-only sub-agents in parallel** (one message, several agent
    calls). Use a read-only agent type where the harness has one that can
-   review code, not just search. One agent per lens; each lens has its own
-   file in `lenses/` next to this one, with its scope and what to look for:
+   review code, not just search. Each agent starts from a fresh context:
+   never a fork or any agent that inherits this conversation, or the
+   review is no longer independent (and a fork ignores the model choice
+   below). One agent per lens; each lens has its own file in `lenses/` next
+   to this one, with its scope and what to look for:
 
-   | Lens (label) | File | Scope |
-   |---|---|---|
-   | Plan conformance (`plan`) | `lenses/plan.md` | the whole epic: every open PR plus the already merged children |
-   | Correctness (`correctness`) | `lenses/correctness.md` | each open PR |
-   | Tests (`tests`) | `lenses/tests.md` | each open PR |
-   | Security (`security`) | `lenses/security.md` | each open PR |
+   | Lens (label) | File | Model | Scope |
+   |---|---|---|---|
+   | Plan conformance (`plan`) | `lenses/plan.md` | sonnet | the whole epic: every open PR plus the already merged children |
+   | Correctness (`correctness`) | `lenses/correctness.md` | sonnet | each open PR |
+   | Tests (`tests`) | `lenses/tests.md` | sonnet | each open PR |
+   | Security (`security`) | `lenses/security.md` | opus | each open PR |
 
-   To change what a lens checks, edit its file; a new lens is a new file
-   plus a row here. When the open PRs together change more than ~2000
+   Run each agent on the model in its lens file's frontmatter (`model:`).
+   On a harness with other model names, use its equivalent tier (sonnet =
+   mid tier, opus = top tier); if it cannot choose a model, use its
+   default. The verification in step 3 stays in this session.
+
+   To change what a lens checks or which model runs it, edit its file (and
+   the row here); a new lens is a new file plus a row here. When the open PRs together change more than ~2000
    lines, split the correctness, tests and security lenses per PR instead
    of one agent per lens. Each brief gives:
    - the lens file's content, verbatim;

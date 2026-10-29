@@ -1,3 +1,7 @@
+---
+model: sonnet
+---
+
 # Lens: tests
 
 Label: `tests`. Scope: each open PR, its tests against its child's

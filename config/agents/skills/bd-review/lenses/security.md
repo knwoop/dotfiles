@@ -1,3 +1,7 @@
+---
+model: opus
+---
+
 # Lens: security
 
 Label: `security`. Scope: each open PR, its own layer's diff, read against

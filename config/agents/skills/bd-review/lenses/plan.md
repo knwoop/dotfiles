@@ -1,3 +1,7 @@
+---
+model: sonnet
+---
+
 # Lens: plan conformance
 
 Label: `plan`. Scope: the whole epic — every open PR plus the children
