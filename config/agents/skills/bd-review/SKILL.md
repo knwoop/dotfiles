@@ -1,6 +1,6 @@
 ---
 name: bd-review
-description: Review a beads epic's stacked PRs from the plan session, with a context independent of the implementer. Runs inside the epic's plan worktree after bd-go has opened PRs: fans out read-only sub-agents over every open child PR on four lenses — plan conformance, correctness, tests, security — verifies each finding against the code, shows the list to the user, and files each accepted finding as a bd issue under its child, so the work session — or any other agent — picks it up from bd. Nothing is posted on GitHub. Trigger on "/bd-review", "review the stack", or when the user asks to review a bd epic's PRs before merging.
+description: Review a beads epic's stacked PRs from the plan session, with a context independent of the implementer. Runs inside the epic's plan worktree after bd-go has opened PRs: fans out read-only sub-agents over every open child PR on four lenses — plan conformance, correctness, tests, security — verifies each finding against the code, shows the list to the user, and files each accepted finding as a bd issue under its child, so the work session — or any other agent — picks it up from bd. Nothing is posted on GitHub. "/bd-review status" runs no review: it reads every round back from bd and writes it as one Markdown report to open in mo. Trigger on "/bd-review", "review the stack", "show the review results", or when the user asks to review a bd epic's PRs before merging.
 ---
 
 # bd-review
@@ -28,7 +28,8 @@ comments, no review approvals or rejections, no labels.
 ## Where to run
 
 Only inside the epic's plan worktree (branch `<epic-id>-<slug>-plan`), once
-`bd-go` has opened PRs. Resolve the epic from the branch with bd-plan's
+`bd-go` has opened PRs (`status` also runs anywhere else when the user names
+the epic). Resolve the epic from the branch with bd-plan's
 "Parent issue" snippet (`bd list --all -n 0`). Anywhere else, point the user
 to the plan session. No child has a PR yet → say so and suggest `/bd-go`.
 
@@ -49,6 +50,21 @@ title (IDs may appear alongside, small).
      its acceptance criteria.
    - Per PR: `gh pr view <n> --json
      number,title,state,headRefName,headRefOid,baseRefName,additions,deletions`.
+     A child that is not closed but has no `external_ref` may still have a
+     PR the work session did not record. Its branch starts with
+     `<epic-id>-<child-hash>-` (bd-go branch names; `<child-hash>` is the
+     child id without the `<project>-` prefix), so look it up:
+
+     ```bash
+     git ls-remote --heads origin "<epic-id>-<child-hash>-*"
+     gh pr list --head <branch> --state all --json number,state
+     ```
+
+     Exactly one branch with one PR → use it, record it
+     (`bd update <child-id> --external-ref gh-<n>` and
+     `bd comment <child-id> "PR #<n> (found by bd-review)"`), and say so in
+     the report. No branch → the child has no PR yet. Several branches or
+     PRs → do not guess: list them in the report and skip that child.
      Review only OPEN PRs. Order them by stack, bottom first
      (`gh stack view --short` from the work worktree, or follow
      `baseRefName` down to the default branch).
@@ -138,11 +154,22 @@ title (IDs may appear alongside, small).
 
    ```bash
    bd update <child-id> --set-metadata review_sha=<head-sha> --set-metadata review_round="$tag"
-   bd comment <epic-id> "Review $tag: <n> findings filed on <children>; <children> clean"
    ```
 
-   The epic comment is the human trail only; state lives in the finding
-   issues. Paths stay relative to the repo root. Never write absolute
+   Then record the round on the epic, also when the user filed nothing.
+   Findings that are not filed exist nowhere else, so they go here, one
+   line each:
+
+   ```bash
+   bd comment <epic-id> "Review $tag
+   reviewed: <child title> @<sha>; <child title> @<sha> ...
+   filed: <n> (<finding ids>)
+   not filed: [<severity>/<lens>] <child title> <path>:<line> — <defect> ...
+   dropped in verification: [<lens>] <path>:<line> — <defect>; <why it does not hold> ..."
+   ```
+
+   Filed findings live in their issues, the rest only in this comment.
+   Paths stay relative to the repo root. Never write absolute
    paths, `$HOME`, a username, credentials, or personal data from the code
    or production: the issue data syncs off this machine
    (`.beads/config.yaml` has a `sync.remote`). Write the findings in the
@@ -162,12 +189,54 @@ title (IDs may appear alongside, small).
    bd-review existed still know what to do. If the work session is gone,
    say so: the findings stay in bd for whichever agent works the epic next.
 
-7. **Report** the round's state from bd, never from memory:
-   `bd list --json --label "$tag" --all -n 0` → open (not yet fixed),
-   closed (fixed), closed with label `declined` (the work session's reason
-   is the close reason; the user decides). Later `/bd-review` and `/bd-go`
-   passes report open rounds the same way; a round is done when none of
-   its findings is open.
+7. **Report** with "Status" below, for this round: it reads the state back
+   from bd, never from memory, and opens the report. Later `/bd-review` and
+   `/bd-go` passes report open rounds the same way; a round is done when
+   none of its findings is open.
+
+## Status: read the results back (no review)
+
+`/bd-review status` (or "show the review results") runs no agents and
+changes nothing in bd. It rebuilds every round of the epic from bd, so it
+works from any session, after the reviewing session is gone, and for any
+agent that can run `bd`.
+
+1. **Resolve the epic** from the branch as in "Where to run", or from the
+   epic the user names (by title, `bd list --json --all -n 0`).
+2. **Read the rounds**: `bd comments <epic-id> --json` → every comment
+   whose text starts with `Review RV-` (reviewed children and shas, not
+   filed, dropped). Newest first.
+3. **Read the findings**: `bd list --json --label review --all -n 0`, kept
+   to those whose parent is a child of the epic or the epic itself (a
+   finding moved there when its PR merged first). Per finding: its round
+   label `RV-...`, lens label, priority (1 blocker / 2 should / 3 nit),
+   title, `path:line` from the description, status, and close reason.
+   Status reads: open, in progress, fixed (`fixed in <sha>`), declined
+   (label `declined`, with the reason), moved (parent is the epic).
+4. **Write the report** to `<scratchpad>/review-<epic-hash>.md`, in the
+   user's language:
+
+   ```markdown
+   # Review: <epic title> (<YYYY-MM-DD>)
+
+   | Round | Reviewed | Filed | Open | Fixed | Declined | Not filed | Dropped |
+   |---|---|---|---|---|---|---|---|
+
+   ## <round tag>
+   ### <child title> — PR #<n> @<short sha>
+   | Severity | Lens | Finding | Where | Status |
+   |---|---|---|---|---|
+   Not filed: <one line each>
+   Dropped in verification: <one line each, with why>
+   ```
+
+   Rounds newest first, children in merge order (bottom first), findings
+   by severity. Open and declined findings are the user's to act on, so
+   they come first within a child.
+5. **Open it**: if `mo` is installed (`command -v mo`), register and open
+   it as the mo skill does (`mo --target <repo name> --open <path>`);
+   otherwise give the path. In chat, show only the summary table and the
+   open and declined findings.
 
 ## Apply a review (work session)
 
