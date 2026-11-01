@@ -146,7 +146,10 @@ anything that writes outside the scratchpad while researching.
    The review is for the user: the shape, the scenario, what is left to
    decide, readable in a few minutes. The evidence is for the agent that
    plans or picks the work up later: every fact found, with its source,
-   so nothing has to be researched twice. Two files, one set of facts:
+   so nothing has to be researched twice. **The evidence is the source of
+   truth.** The review is a view of it for reading; where the two
+   disagree, the evidence is right and the review is fixed. Two files, one
+   set of facts:
    - number the done questions (Q1, Q2, ...) and use the same numbers in
      both files;
    - everything in the review has its evidence: a fact in the review
@@ -309,8 +312,9 @@ anything that writes outside the scratchpad while researching.
    step in THIS session: create-plan (clear-plan-skills:create-plan), which
    reads the research from `bd show <id> --json` → `.[0].notes` (or the
    two files in `.[0].metadata.research_doc` / `research_evidence`),
-   starts from "Questions for the plan", takes its facts from the
-   evidence, and cites the research in its References; then `/bd-plan`.
+   starts from "Questions for the plan", takes every fact from the
+   evidence (the source of truth, not the review), and cites the research
+   in its References; then `/bd-plan`.
    If this session has filled up during research, suggest planning in a
    fresh claude in the same worktree. The research is on the issue, so nothing is lost.
 

@@ -23,7 +23,8 @@ plan to bd.
   OK, then continue here. If the issue carries research from `bd-research`
   (`bd show <id> --json` → `.[0].notes`, or the files in `.[0].metadata.research_doc`
   and `research_evidence`), plan from it: answer its "Questions for the plan",
-  take facts from its evidence, and cite it under References.
+  take every fact from its evidence (the source of truth; the review is only a
+  view of it), and cite it under References.
 - Parent issue:
   - **Inside a bd-dev plan worktree** (the usual case): derive it from the
     branch — the branch is `<issue-id>-<slug>-plan`, so the parent is the
