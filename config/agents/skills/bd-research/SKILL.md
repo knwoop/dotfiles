@@ -62,7 +62,10 @@ document in the scratchpad, and say that nothing was stored.
    without finding, and where, so nobody searches for it again: not found
    there is not the same as does not exist. Bring over everything from the
    findings files that serves the purpose: they are gone after the
-   session. Check the facts a decision rests on yourself.
+   session. Have the facts a decision rests on checked by a separate,
+   fresh sub-agent that opens each cited source and reports whether it
+   says what the document claims; mark each fact checked or sub-agent
+   only, and fix or drop what did not hold.
    End with what is uncertain and what could block the goal: known
    blockers, and unknowns that might turn out to be blockers, as facts,
    without judging whether to go ahead.
