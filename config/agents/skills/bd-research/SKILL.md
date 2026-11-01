@@ -112,39 +112,47 @@ anything that writes outside the scratchpad while researching.
    reading in this context. This context is for synthesis.
 
 4. **Synthesize and verify.** Wait for every sub-agent. Merge the findings
-   and connect them across areas. Spot-check the claims the review part
-   and the questions for the plan rest on by opening the cited lines,
-   re-running the query, or reading the cited passage yourself. A wrong source is worse than none. Mark what you did
-   not confirm, and drop what you found to be wrong. Keep every fact that
-   serves the purpose, even if the review part has no room for it: it goes
-   in the evidence part (step 5), so no later session has to search for it
+   and connect them across areas. Spot-check the claims the review and
+   the questions for the plan rest on by opening the cited lines,
+   re-running the query, or reading the cited passage yourself. A wrong
+   source is worse than none. Mark what you did not confirm, and drop
+   what you found to be wrong. Keep every fact that
+   serves the purpose, even if the review has no room for it: it goes in
+   the evidence (step 5), so no later session has to search for it
    again. Strip any recommendation a sub-agent slipped in. Where it pointed
    at a real trade-off, turn it into a question for the plan.
 
-5. **Write the research document** to `<scratchpad>/research.md`. Write it
-   in the user's language. The headings below are the structure, translate
-   them as needed. Required sections are marked; include an optional
-   section only when it has content.
+5. **Write two files**, both in the user's language: the **review**,
+   `<scratchpad>/research.md`, and the **evidence**,
+   `<scratchpad>/research-evidence.md`. The headings below are the
+   structure, translate them as needed. Required sections are marked;
+   include an optional section only when it has content.
 
-   One document, two readers. The **review part** (everything up to
-   Sources) is for the user: the shape, the scenario, what is left to
-   decide, readable in a few minutes. The **evidence part** is for the
-   agent that plans or picks the work up later: every fact found, with its
-   source, so nothing has to be researched twice. They stay one document
-   so they cannot drift apart:
-   - everything in the review part has its evidence in the evidence part;
+   The review is for the user: the shape, the scenario, what is left to
+   decide, readable in a few minutes. The evidence is for the agent that
+   plans or picks the work up later: every fact found, with its source,
+   so nothing has to be researched twice. Two files, one set of facts:
+   - number the done questions (Q1, Q2, ...) and use the same numbers in
+     both files;
+   - everything in the review has its evidence: a fact in the review
+     names the done question it comes from (`→ Q2`), and that section of
+     the evidence holds its source;
    - any evidence that bears on a question for the plan shows up in that
-     question's table, so the user has reviewed everything a decision
-     rests on;
-   - the evidence part is written toward the purpose too. A fact that
-     serves none of the done questions belongs in Out of scope findings,
-     not in the evidence.
+     question's table in the review, so the user has reviewed everything
+     a decision rests on;
+   - the evidence is written toward the purpose too. A fact that serves
+     none of the done questions belongs in Out of scope findings, not in
+     the evidence;
+   - a change to one file is a change to both: fix the fact in the
+     evidence and the review together.
+
+   The review, `research.md`:
 
    ```markdown
    # <topic> research (<YYYY-MM-DD>)
 
-   <Intro (required): the purpose, the scenario, the done questions, and
-   what is out of scope, as agreed in step 1.>
+   <Intro (required): the purpose, the scenario, the numbered done
+   questions, and what is out of scope, as agreed in step 1.>
 
    - Issue: <id> / Commit: <short sha> on <branch>
 
@@ -192,20 +200,26 @@ anything that writes outside the scratchpad while researching.
 
    ## Sources (required)
    <URLs, PRs, queries.>
+   ```
 
-   ## Evidence (for agents) (required)
-   <Frame: the purpose, the scenario, the done questions, and the commit,
-   restated so an agent that reads only this part knows what the facts
-   were gathered for, and can tell which ones no longer hold if the
-   scenario or the code changes.>
-   ### <Done question>
+   The evidence, `research-evidence.md`:
+
+   ```markdown
+   # <topic> research evidence (<YYYY-MM-DD>)
+
+   <Frame (required): the purpose, the scenario, the numbered done
+   questions, the issue, and the commit, restated so an agent that reads
+   only this file knows what the facts were gathered for, and can tell
+   which ones no longer hold if the scenario or the code changes.>
+
+   ## Q<n>: <done question>
    <Status: answered / partly / could not determine. Then a table: fact |
    source (`path:line`, query + environment + time range, URL with the
    passage quoted) | verified (by you / sub-agent only) | bears on (a
    question for the plan, or none). Then: searched, not found | where
    (paths, queries, URLs). The not-found list is what saves the next
    session the most time; never leave it out.>
-   ### Other facts
+   ## Other facts
    <Facts that serve the purpose but no single done question.>
    ```
 
@@ -225,22 +239,23 @@ anything that writes outside the scratchpad while researching.
    a claim like any other: verify it in step 4, and never draw a preferred
    option highlighted.
 
-   The drawing rule applies to the review part. The evidence part is
-   tables: precise, complete, sourced; no diagrams needed.
+   The drawing rule applies to the review. The evidence is tables:
+   precise, complete, sourced; no diagrams needed.
 
    There is no summary section: the intro states the purpose and
    "Questions for the plan" carries what is left to decide, and anything
    else a summary would say is repeated from the sections below it. Keep
-   the review part short enough for the user to read in a few minutes,
-   around 200 lines at most, follow-ups included. The evidence part has no
-   line limit, but it holds facts, not file dumps or long excerpts.
+   the review short enough for the user to read in a few minutes, around
+   200 lines at most, follow-ups included. The evidence has no line limit,
+   but it holds facts, not file dumps or long excerpts. The rules below
+   apply to both files.
    Paths are relative to the repo root. Never write absolute paths, `$HOME`,
    a username, credentials, or personal data from production: the issue
    data syncs off this machine (`.beads/config.yaml` has a `sync.remote`).
 
 6. **Hand it to the user for review.** Show the Questions for the plan
    (the dependency flowchart and the question headings), and give the
-   file path. Ask them to read the review part; the evidence part is
+   paths of both files. Ask them to read the review; the evidence is
    there to check any claim they doubt. Then:
    - **accept** → step 7;
    - **steer** ("it missed X", "Y is not the relevant path", "look at Z
@@ -251,20 +266,22 @@ anything that writes outside the scratchpad while researching.
 
    Never store research the user has not accepted.
 
-7. **Store the accepted research on the epic.** By default it goes in the
-   issue's `notes` (`design` is reserved for the plan, `description` for the
-   original request):
+7. **Store the accepted research on the epic.** By default both files go
+   in the issue's `notes`, the review first and the evidence after it, so
+   they are stored, read, and overwritten together (`design` is reserved
+   for the plan, `description` for the original request):
 
    ```bash
-   bd update <id> --notes "$(cat <scratchpad>/research.md)"
+   bd update <id> --notes "$(cat <scratchpad>/research.md; printf '\n\n'; cat <scratchpad>/research-evidence.md)"
    bd comment <id> "Research stored in notes (commit <short-sha>)"
    ```
 
-   Only if the user names a place for the document (a file path, a docs
-   directory, a repo), write it there instead and record only the pointer:
+   Only if the user names a place for the documents (a directory, a repo),
+   write both files there instead and record only the pointers:
 
    ```bash
-   bd update <id> --set-metadata "research_doc=<path>"
+   bd update <id> --set-metadata "research_doc=<path>/research.md" \
+     --set-metadata "research_evidence=<path>/research-evidence.md"
    ```
 
    Never pick a location in some repo on your own. Paths in metadata follow
@@ -274,31 +291,30 @@ anything that writes outside the scratchpad while researching.
 
 8. **Report and point to the next step.** One-line summary plus the next
    step in THIS session: create-plan (clear-plan-skills:create-plan), which
-   reads the research from `bd show <id> --json` → `.[0].notes` (or
-   `.[0].metadata.research_doc`), starts from "Questions for the plan",
-   takes its facts from the evidence part, and cites the research in its
-   References; then `/bd-plan`. If this session
-   has filled up during research, suggest planning in a fresh claude in the
-   same worktree. The research is on the issue, so nothing is lost.
+   reads the research from `bd show <id> --json` → `.[0].notes` (or the
+   two files in `.[0].metadata.research_doc` / `research_evidence`),
+   starts from "Questions for the plan", takes its facts from the
+   evidence, and cites the research in its References; then `/bd-plan`.
+   If this session has filled up during research, suggest planning in a
+   fresh claude in the same worktree. The research is on the issue, so nothing is lost.
 
 ## Follow-up questions
 
 If the user asks a follow-up before accepting, research it the same way and
-add a `## Follow-up: <topic>` section to the review part and its facts
-to the evidence part (a new done question if it adds one). It follows
-the same rules as the document: diagrams first, its questions in the
-options | facts for | facts against form, and it counts toward the
-200-line limit of the review part. If it would push the review part past
-that, fold what it found into the existing sections instead of
-appending. After the
-research is stored, store it again only when the user accepts the revision.
+add a `## Follow-up: <topic>` section to the review and its facts to the
+evidence (a new numbered done question if it adds one). It follows the
+same rules: diagrams first, its questions in the options | facts for |
+facts against form, and it counts toward the 200-line limit of the
+review. If it would push the review past that, fold what it found into
+the existing sections instead of appending. After the research is
+stored, store it again only when the user accepts the revision.
 
 ## Notes
 
 - Research is never a cache. Every run reads the live code and data. An
   older research in `notes` is something to compare against, not something
   to trust. If the code changed since its commit, say so. Its evidence
-  part tells a new run where to look first and what was already searched
+  tells a new run where to look first and what was already searched
   without result; re-check those facts whose source changed since, and
   the rest only when a question for the plan rests on them.
 - Research does not change the issue's type or status and cuts no children.

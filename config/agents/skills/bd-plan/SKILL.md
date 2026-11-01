@@ -21,8 +21,9 @@ plan to bd.
   produced in this conversation (Plan Mode / clear-plan-skills:create-plan).
 - If no plan exists yet, plan first (clear-plan-skills:create-plan), get the user's
   OK, then continue here. If the issue carries research from `bd-research`
-  (`bd show <id> --json` → `.[0].notes`, or `.[0].metadata.research_doc`), plan
-  from it: answer its "Questions for the plan" and cite it under References.
+  (`bd show <id> --json` → `.[0].notes`, or the files in `.[0].metadata.research_doc`
+  and `research_evidence`), plan from it: answer its "Questions for the plan",
+  take facts from its evidence, and cite it under References.
 - Parent issue:
   - **Inside a bd-dev plan worktree** (the usual case): derive it from the
     branch — the branch is `<issue-id>-<slug>-plan`, so the parent is the
