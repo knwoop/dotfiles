@@ -246,9 +246,14 @@ the two research documents.
    <Opens with a flowchart of the questions as nodes and which one's
    answer changes another as edges, so the plan sees where to start; all
    nodes drawn alike. Per question: the question as a `###` heading, then
-   a table of options | facts for | facts against, each fact with its
-   source. No pick, no ranking. Then a table of what could not be
-   determined | who could answer it.>
+   a diagram of how the options differ where they differ in shape: each
+   option's path and where it stops (login methods, request paths), or
+   the boundaries and what crosses them (units of isolation); options
+   side by side, none highlighted. Then a table of options | facts for |
+   facts against: one short fact per line in a cell, each ending in its
+   `→ Qn`, the detail and source left to the evidence. No pick, no
+   ranking. Then a table of what could not be determined | who could
+   answer it.>
 
    ## Out of scope findings (optional)
    <Things noticed along the way that belong to another issue.>
@@ -266,7 +271,10 @@ the two research documents.
    `stateDiagram`. Tables are for attributes of things already in a
    diagram and for side-by-side comparisons; a section that is only a
    table where a diagram would show how its rows relate is not done.
-   Prose is for what neither can carry, a sentence or two per block. Keep
+   A table cell holds a short phrase, not sentences: when a cell needs an
+   explanation, the explanation belongs in the evidence and the cell
+   points to it (`→ Qn`). Prose is for what neither can carry, a sentence
+   or two per block. Keep
    each diagram small enough to read without zooming (about 12 nodes;
    split it otherwise), and give every node or edge that states a fact a
    `path:line` or URL in its label or in the table under it. A diagram is
