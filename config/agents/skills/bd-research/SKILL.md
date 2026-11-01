@@ -55,8 +55,8 @@ Not just code. Use whatever the question needs:
 - Production data: metrics, logs, traces, warehouse queries, through whatever
   tools the session has (Datadog, BigQuery, Cloud Logging, ...). Record the
   query, the environment, and the time range with every number
-- Vendor / library docs and specs: quote the relevant passage verbatim, add a
-  translation if the document's language differs, and cite the URL
+- Vendor / library docs and specs: quote the relevant passage verbatim and
+  cite the URL
 - History: past PRs, commits, issues, earlier docs (`gh`, `git log`). This is
   historical context only. The live code and current data are the source of
   truth
@@ -143,8 +143,8 @@ the two research documents.
    context is full of search traffic, half-read files, and sub-agent
    guesses that did not hold up; a review written here picks some of it
    up as if it were fact. Spawn one agent with a fresh context and give
-   it only: the evidence file path, the review format and drawing rules
-   below, and the user's language. It writes `<scratchpad>/research.md`
+   it only: the evidence file path and the review format and drawing
+   rules below. It writes `<scratchpad>/research.md`
    from the evidence and nothing else: no searching, no reading code, no
    facts of its own. When the review needs a fact the evidence does not
    hold, it lists the gap instead of filling it; go back to step 3 or 4
@@ -153,11 +153,11 @@ the two research documents.
    that holds the fact, every question for the plan is backed by the
    evidence rows that bear on it, and every diagram matches the evidence.
 
-   **The two files**, both in the user's language: the **evidence**,
+   **The two files**: the **evidence**,
    `<scratchpad>/research-evidence.md`, and the **review**,
-   `<scratchpad>/research.md`. The headings below are the structure,
-   translate them as needed. Required sections are marked; include an
-   optional section only when it has content.
+   `<scratchpad>/research.md`. The headings below are the structure.
+   Required sections are marked; include an optional section only when it
+   has content.
 
    The review is for the user: the shape, the scenario, what is left to
    decide, readable in a few minutes. The evidence is for the agent that
@@ -230,7 +230,7 @@ the two research documents.
    <Table: metric | value | query | environment | time range.>
 
    ## External specs (optional)
-   <Quoted passages (original + translation) with URLs; limits and quotas
+   <Quoted passages (verbatim) with URLs; limits and quotas
    as a table.>
 
    ## Conventions (required; write "none found" if so)
