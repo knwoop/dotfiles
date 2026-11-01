@@ -1,6 +1,6 @@
 ---
 name: bd-research
-description: Research a beads (bd) epic before planning it — the "research" step of research → plan → implement. Runs inside a bd-dev plan worktree: grounds the question, fans out read-only sub-agents over the code, production data, vendor docs, and past PRs so the search traffic stays out of this context, and compacts their findings into one research document that states facts with sources and leaves every decision to the plan — no recommendations, no fixes. Once the user accepts it, it is stored on the epic (notes, or a path the user names) so create-plan / bd-plan build on it. Trigger on "/bd-research", "research this first", or when the user asks to investigate a bd issue before planning it.
+description: Research a beads (bd) epic before planning it — the "research" step of research → plan → implement. Runs inside a bd-dev plan worktree: agrees on the purpose and scenario with the user first, then fans out read-only sub-agents over the code, production data, vendor docs, and past PRs so the search traffic stays out of this context, and compacts their findings into one research document that states facts with sources and leaves every decision to the plan — no recommendations, no fixes. Once the user accepts it, it is stored on the epic (notes, or a path the user names) so create-plan / bd-plan build on it. Trigger on "/bd-research", "research this first", or when the user asks to investigate a bd issue before planning it.
 ---
 
 # bd-research
@@ -67,29 +67,39 @@ anything that writes outside the scratchpad while researching.
 
 ## Steps
 
-1. **Ground the question.** Read the issue (`bd show <id> --json`: title,
-   description, and `notes`, which may hold a previous research). Read in
-   full any file, ticket, doc, or thread the user points to, in this
-   context, before spawning anything. Write down:
-   - the question: what has to be known before someone can plan this;
-   - why it is being asked (the incident, request, or goal behind it);
-   - what is out of scope.
+1. **Agree on the purpose before researching.** Read the issue (`bd show
+   <id> --json`: title, description, and `notes`, which may hold a
+   previous research). Read in full any file, ticket, doc, or thread the
+   user points to, in this context, before spawning anything. Then draft:
+   - the purpose: what decision or plan this research feeds, and why now
+     (the incident, request, or goal behind it);
+   - the scenario it assumes: who uses the result, what is already fixed
+     (platform, accounts, budget, who operates it), so the research looks
+     at one concrete case, not every case the goal could mean;
+   - done: the questions that must have answers (or a named "could not
+     determine") before planning can start;
+   - out of scope.
 
-   If the issue is too vague to say where to look, ask the user one targeted
-   question (AskUserQuestion). The user's steering here matters more than
-   anything else in this skill. Do not interview them about the solution.
+   Show the draft and confirm it with the user (AskUserQuestion) every
+   time, not only when the issue looks vague: a broad goal ("a platform
+   for X") read one way sends every sub-agent down that reading, and a
+   scenario corrected after the research means doing it again. Ask about
+   the goal and the fixed facts, a few questions at most; do not interview
+   the user about the solution. Spawn nothing until the user agrees. The
+   user's steering here matters more than anything else in this skill.
 
-2. **Decompose.** Split the question into independent research areas, for
-   example: where the relevant code lives and how it is wired; the path a
-   request or piece of data takes; what production data shows; what the
-   vendor / library spec says; the existing conventions a change would have
-   to follow; history (why it is the way it is). Track the areas as a todo
-   list.
+2. **Decompose.** Split the done questions into independent research
+   areas, for example: where the relevant code lives and how it is wired;
+   the path a request or piece of data takes; what production data shows;
+   what the vendor / library spec says; the existing conventions a change
+   would have to follow; history (why it is the way it is). Track the
+   areas as a todo list.
 
 3. **Fan out read-only sub-agents in parallel** (one message, several agent
    calls), one per area. Use a read-only search/explore agent type where the
    harness has one. Each brief says:
-   - the area and the overall question (one or two sentences of context);
+   - the area, the purpose, and the scenario (one or two sentences of
+     context);
    - read-only, and the facts-not-opinions rule;
    - the return shape: a compact summary, at most ~40 lines, a source for
      every claim (`path:line`, query + time range, URL), flows as ordered
@@ -116,24 +126,25 @@ anything that writes outside the scratchpad while researching.
    ```markdown
    # <topic> research (<YYYY-MM-DD>)
 
-   <Intro paragraph (required): the question, why it is asked, what is out
-   of scope.>
+   <Intro (required): the purpose, the scenario, the done questions, and
+   what is out of scope, as agreed in step 1.>
 
    - Issue: <id> / Commit: <short sha> on <branch>
 
-   ## Summary (required)
-   <The answer to the question, as facts. 3–6 bullets. No recommendation.>
-
    ## Findings (required)
-   <One Mermaid flowchart of the areas: components as nodes, how they
-   connect as labeled edges.>
+   <Opens with one Mermaid flowchart of the areas: components as nodes,
+   how they connect as labeled edges.>
    ### <Area>
-   <Table: what | where (`path:line`) | connects to. At most a line or two
-   of prose under it.>
+   <A diagram of the area first: what talks to what (flowchart), what
+   state a resource or process can be in (stateDiagram), what is
+   enabled / missing (flowchart, one class per status). Then a table only
+   for the attributes the diagram cannot carry, `path:line` per row.>
 
-   ## Flow (optional)
-   <Mermaid sequenceDiagram (or flowchart) of the request / data / control
-   path, `path:line` on each step.>
+   ## Flow (required when there is any path)
+   <One Mermaid sequenceDiagram per path the question touches: a request,
+   a login, a token refresh, a job run, a deploy. `path:line` or a doc URL
+   on each step. Omit the section only when nothing in the question
+   happens in order. Never fill it with a table of options.>
 
    ## Observed data (optional)
    <Table: metric | value | query | environment | time range.>
@@ -147,13 +158,17 @@ anything that writes outside the scratchpad while researching.
    files, ...) | how this repo does it | `path:line` example.>
 
    ## Constraints (optional)
-   <Table: constraint | source | direct consequence. No "therefore do X".>
+   <A flowchart from each constraint to its direct consequences (what it
+   blocks, what it leaves undetermined), source on each node. No
+   "therefore do X".>
 
    ## Questions for the plan (required)
-   <Per question: the question as a `###` heading, then a table of
-   options | facts for | facts against, each fact with its source. No pick,
-   no ranking. Then a table of what could not be determined | who could
-   answer it.>
+   <Opens with a flowchart of the questions as nodes and which one's
+   answer changes another as edges, so the plan sees where to start; all
+   nodes drawn alike. Per question: the question as a `###` heading, then
+   a table of options | facts for | facts against, each fact with its
+   source. No pick, no ranking. Then a table of what could not be
+   determined | who could answer it.>
 
    ## Out of scope findings (optional)
    <Things noticed along the way that belong to another issue.>
@@ -162,25 +177,35 @@ anything that writes outside the scratchpad while researching.
    <URLs, PRs, queries.>
    ```
 
-   **Diagrams and tables first, prose last.** The reader should get the
-   shape at a glance and drop into text only for detail. Anything with
-   structure goes in a picture: connections and paths as Mermaid
-   (`flowchart`, `sequenceDiagram`, `stateDiagram`), comparisons and lists
-   of facts as tables. Prose is for what neither can carry, a sentence or
-   two per block. Keep each diagram small enough to read without zooming
-   (about 12 nodes; split it otherwise), and give every node or edge that
-   states a fact a `path:line` in its label or in the table under it. A
-   diagram is a claim like any other: verify it in step 4, and never draw a
-   preferred option highlighted.
+   **Diagrams first, then tables, prose last.** The reader should get the
+   shape at a glance and drop into tables and text only for detail. Every
+   `##` section with more than one fact opens with a diagram, except
+   Observed data, External specs, Conventions, and Sources. Draw anything
+   with relations, order, states, or dependencies: connections and
+   dependencies as `flowchart`, paths as `sequenceDiagram`, lifecycles as
+   `stateDiagram`. Tables are for attributes of things already in a
+   diagram and for side-by-side comparisons; a section that is only a
+   table where a diagram would show how its rows relate is not done.
+   Prose is for what neither can carry, a sentence or two per block. Keep
+   each diagram small enough to read without zooming (about 12 nodes;
+   split it otherwise), and give every node or edge that states a fact a
+   `path:line` or URL in its label or in the table under it. A diagram is
+   a claim like any other: verify it in step 4, and never draw a preferred
+   option highlighted.
 
-   Keep it short enough for the user to read in a few minutes, around 200
-   lines at most. It is also the input to planning, so leave out noise.
+   There is no summary section: the intro states the purpose and
+   "Questions for the plan" carries what is left to decide, and anything
+   else a summary would say is repeated from the sections below it. Keep
+   it short enough for the user to read in a few minutes, around 200
+   lines at most, follow-ups included. It is also the input to planning,
+   so leave out noise.
    Paths are relative to the repo root. Never write absolute paths, `$HOME`,
    a username, credentials, or personal data from production: the issue
    data syncs off this machine (`.beads/config.yaml` has a `sync.remote`).
 
-6. **Hand it to the user for review.** Show the Summary and Questions for
-   the plan, and give the file path. Ask them to read the document, then:
+6. **Hand it to the user for review.** Show the Questions for the plan
+   (the dependency flowchart and the question headings), and give the
+   file path. Ask them to read the document, then:
    - **accept** → step 7;
    - **steer** ("it missed X", "Y is not the relevant path", "look at Z
      instead") → re-run steps 2–5 with the correction. If the research went
@@ -222,7 +247,11 @@ anything that writes outside the scratchpad while researching.
 ## Follow-up questions
 
 If the user asks a follow-up before accepting, research it the same way and
-add a `## Follow-up: <topic>` section to the same document. After the
+add a `## Follow-up: <topic>` section to the same document. It follows
+the same rules as the document: diagrams first, its questions in the
+options | facts for | facts against form, and it counts toward the
+200-line limit. If it would push the document past that, fold what it
+found into the existing sections instead of appending. After the
 research is stored, store it again only when the user accepts the revision.
 
 ## Notes
