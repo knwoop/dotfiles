@@ -51,12 +51,16 @@ document in the scratchpad, and say that nothing was stored.
    with sources and what it searched without finding, and replies with a
    short summary and the file path. Stop when the agreed questions are
    answered or known to be unanswerable; go back for more at most a couple
-   of times.
+   of times. A question still open at that point stays open in the
+   document, with what was searched, not settled as unanswerable.
 
 3. **Write the document**, `<scratchpad>/research.md`, from those files,
    in whatever form you like. Start it with what was agreed in step 1, so a
-   later reader knows what the facts were gathered for, and keep what was
-   searched without finding, so nobody searches for it again. Bring over
+   later reader knows what the facts were gathered for, together with the
+   date and the commit and versions it looked at; give every number the
+   environment, time range, and query it came from. Keep what was searched
+   without finding, and where, so nobody searches for it again: not found
+   there is not the same as does not exist. Bring over
    everything from the findings files that serves the purpose: they are
    gone after the session. Check the facts a decision rests on yourself.
    End with what is uncertain and what could block the goal: known
