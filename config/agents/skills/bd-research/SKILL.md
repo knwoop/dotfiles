@@ -113,8 +113,8 @@ anything that writes outside the scratchpad while researching.
 
 4. **Synthesize and verify.** Wait for every sub-agent. Merge the findings
    and connect them across areas. Spot-check the claims the review part
-   and the questions for the plan rest on by opening the cited lines, re-running the query, or reading the cited
-   passage yourself. A wrong source is worse than none. Mark what you did
+   and the questions for the plan rest on by opening the cited lines,
+   re-running the query, or reading the cited passage yourself. A wrong source is worse than none. Mark what you did
    not confirm, and drop what you found to be wrong. Keep every fact that
    serves the purpose, even if the review part has no room for it: it goes
    in the evidence part (step 5), so no later session has to search for it
