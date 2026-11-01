@@ -111,22 +111,37 @@ anything that writes outside the scratchpad while researching.
    are, send a second round at the most relevant spots. Do not do that deep
    reading in this context. This context is for synthesis.
 
-4. **Synthesize and verify.** Wait for every sub-agent. Merge the findings
-   and connect them across areas. Spot-check the claims the review and
-   the questions for the plan rest on by opening the cited lines,
-   re-running the query, or reading the cited passage yourself. A wrong
-   source is worse than none. Mark what you did not confirm, and drop
-   what you found to be wrong. Keep every fact that
-   serves the purpose, even if the review has no room for it: it goes in
-   the evidence (step 5), so no later session has to search for it
-   again. Strip any recommendation a sub-agent slipped in. Where it pointed
-   at a real trade-off, turn it into a question for the plan.
+4. **Synthesize, verify, and finish the evidence.** Wait for every
+   sub-agent. Merge the findings and connect them across areas.
+   Spot-check the claims a question for the plan rests on by opening the
+   cited lines, re-running the query, or reading the cited passage
+   yourself. A wrong source is worse than none. Mark what you did not
+   confirm, and drop what you found to be wrong. Strip any recommendation
+   a sub-agent slipped in. Where it pointed at a real trade-off, turn it
+   into a question for the plan. Write it all to the evidence file
+   (format below): every fact that serves the purpose, so no later
+   session has to search for it again. The evidence is final before the
+   review is started.
 
-5. **Write two files**, both in the user's language: the **review**,
-   `<scratchpad>/research.md`, and the **evidence**,
-   `<scratchpad>/research-evidence.md`. The headings below are the
-   structure, translate them as needed. Required sections are marked;
-   include an optional section only when it has content.
+5. **Write the review from the evidence alone, in a fresh agent.** This
+   context is full of search traffic, half-read files, and sub-agent
+   guesses that did not hold up; a review written here picks some of it
+   up as if it were fact. Spawn one agent with a fresh context and give
+   it only: the evidence file path, the review format and drawing rules
+   below, and the user's language. It writes `<scratchpad>/research.md`
+   from the evidence and nothing else: no searching, no reading code, no
+   facts of its own. When the review needs a fact the evidence does not
+   hold, it lists the gap instead of filling it; go back to step 3 or 4
+   for that fact, add it to the evidence, and have the review redone.
+   Then check its output here: every `→ Qn` points at an evidence section
+   that holds the fact, every question for the plan is backed by the
+   evidence rows that bear on it, and every diagram matches the evidence.
+
+   **The two files**, both in the user's language: the **evidence**,
+   `<scratchpad>/research-evidence.md`, and the **review**,
+   `<scratchpad>/research.md`. The headings below are the structure,
+   translate them as needed. Required sections are marked; include an
+   optional section only when it has content.
 
    The review is for the user: the shape, the scenario, what is left to
    decide, readable in a few minutes. The evidence is for the agent that
@@ -143,8 +158,29 @@ anything that writes outside the scratchpad while researching.
    - the evidence is written toward the purpose too. A fact that serves
      none of the done questions belongs in Out of scope findings, not in
      the evidence;
-   - a change to one file is a change to both: fix the fact in the
-     evidence and the review together.
+   - a fact changes in the evidence first, and the review follows it,
+     never the other way round.
+
+   The evidence, `research-evidence.md`:
+
+   ```markdown
+   # <topic> research evidence (<YYYY-MM-DD>)
+
+   <Frame (required): the purpose, the scenario, the numbered done
+   questions, the issue, and the commit, restated so an agent that reads
+   only this file knows what the facts were gathered for, and can tell
+   which ones no longer hold if the scenario or the code changes.>
+
+   ## Q<n>: <done question>
+   <Status: answered / partly / could not determine. Then a table: fact |
+   source (`path:line`, query + environment + time range, URL with the
+   passage quoted) | verified (by you / sub-agent only) | bears on (a
+   question for the plan, or none). Then: searched, not found | where
+   (paths, queries, URLs). The not-found list is what saves the next
+   session the most time; never leave it out.>
+   ## Other facts
+   <Facts that serve the purpose but no single done question.>
+   ```
 
    The review, `research.md`:
 
@@ -202,27 +238,6 @@ anything that writes outside the scratchpad while researching.
    <URLs, PRs, queries.>
    ```
 
-   The evidence, `research-evidence.md`:
-
-   ```markdown
-   # <topic> research evidence (<YYYY-MM-DD>)
-
-   <Frame (required): the purpose, the scenario, the numbered done
-   questions, the issue, and the commit, restated so an agent that reads
-   only this file knows what the facts were gathered for, and can tell
-   which ones no longer hold if the scenario or the code changes.>
-
-   ## Q<n>: <done question>
-   <Status: answered / partly / could not determine. Then a table: fact |
-   source (`path:line`, query + environment + time range, URL with the
-   passage quoted) | verified (by you / sub-agent only) | bears on (a
-   question for the plan, or none). Then: searched, not found | where
-   (paths, queries, URLs). The not-found list is what saves the next
-   session the most time; never leave it out.>
-   ## Other facts
-   <Facts that serve the purpose but no single done question.>
-   ```
-
    **Diagrams first, then tables, prose last.** The reader should get the
    shape at a glance and drop into tables and text only for detail. Every
    `##` section with more than one fact opens with a diagram, except
@@ -236,8 +251,8 @@ anything that writes outside the scratchpad while researching.
    each diagram small enough to read without zooming (about 12 nodes;
    split it otherwise), and give every node or edge that states a fact a
    `path:line` or URL in its label or in the table under it. A diagram is
-   a claim like any other: verify it in step 4, and never draw a preferred
-   option highlighted.
+   a claim like any other: check it against the evidence in step 5, and
+   never draw a preferred option highlighted.
 
    The drawing rule applies to the review. The evidence is tables:
    precise, complete, sourced; no diagrams needed.
@@ -259,7 +274,8 @@ anything that writes outside the scratchpad while researching.
    there to check any claim they doubt. Then:
    - **accept** → step 7;
    - **steer** ("it missed X", "Y is not the relevant path", "look at Z
-     instead") → re-run steps 2–5 with the correction. If the research went
+     instead") → re-run steps 2–5 with the correction: the evidence first,
+     then the review from it. If the research went
      down a wrong path, start the sub-agents over rather than patching:
      errors carried over from a wrong path keep the plan on it;
    - **discard** → stop. Nothing is stored.
