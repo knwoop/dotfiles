@@ -1,6 +1,6 @@
 ---
 name: bd-plan
-description: Turn an implementation plan (create-plan format) into a beads issue graph. Run inside a bd-dev worktree: attaches the full plan to the current issue's design field, promotes it to epic, and expands the TODO section into child issues with blocking dependencies via bd create --graph. Trigger on "/bd-plan", when the user asks to hand a plan to beads, or right after a plan is approved in Plan Mode / created with create-plan.
+description: Turn an implementation plan (create-plan format) into a beads issue graph. Run inside a bd-dev worktree, it attaches the full plan to the current issue's design field, promotes it to epic, and expands the TODO section into child issues with blocking dependencies via bd create --graph. Trigger on "/bd-plan", when the user asks to hand a plan to beads, or right after a plan is approved in Plan Mode / created with create-plan.
 ---
 
 # bd-plan
@@ -21,8 +21,10 @@ plan to bd.
   produced in this conversation (Plan Mode / clear-plan-skills:create-plan).
 - If no plan exists yet, plan first (clear-plan-skills:create-plan), get the user's
   OK, then continue here. If the issue carries research from `bd-research`
-  (`bd show <id> --json` → `.[0].notes`, or `.[0].metadata.research_doc`), plan
-  from it: answer its "Questions for the plan" and cite it under References.
+  (`bd show <id> --json` → `.[0].notes`, or the files in `.[0].metadata.research_doc`
+  and `research_evidence`), plan from it: answer its "Questions for the plan",
+  take every fact from its evidence (the source of truth; the review is only a
+  view of it), and cite it under References.
 - Parent issue:
   - **Inside a bd-dev plan worktree** (the usual case): derive it from the
     branch — the branch is `<issue-id>-<slug>-plan`, so the parent is the
