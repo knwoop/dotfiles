@@ -63,7 +63,9 @@ Not just code. Use whatever the question needs:
 - Costs, quotas, limits from official pricing / quota pages
 
 Read-only throughout. Never change resources, write to a database, or run
-anything that writes outside the scratchpad while researching.
+anything that writes outside the scratchpad while researching. The only
+files written are in the scratchpad: the sub-agents' findings files and
+the two research documents.
 
 ## Steps
 
@@ -96,30 +98,44 @@ anything that writes outside the scratchpad while researching.
    areas as a todo list.
 
 3. **Fan out read-only sub-agents in parallel** (one message, several agent
-   calls), one per area. Use a read-only search/explore agent type where the
-   harness has one. Each brief says:
-   - the area, the purpose, and the scenario (one or two sentences of
-     context);
-   - read-only, and the facts-not-opinions rule;
-   - the return shape: a compact summary, at most ~40 lines, a source for
-     every claim (`path:line`, query + time range, URL), flows as ordered
-     steps (`a.go:12 → b.go:40 → ...`), each fact tagged with the done
-     question it serves, and an explicit "searched, not found / unsure"
-     list that says where it searched. No file dumps, no long excerpts.
+   calls), one per area. Each one gets its own findings file,
+   `<scratchpad>/research/<nn>-<area>.md`, and that file is the only thing
+   it may write. Use an agent type that can write a file (a read-only
+   explore type usually cannot); the brief restricts it to that one file.
+   Each brief says:
+   - the area, the purpose, the scenario, and the numbered done questions
+     (one or two sentences of context);
+   - read-only apart from its findings file, and the facts-not-opinions
+     rule;
+   - **the findings file holds everything it found**, in the evidence
+     format (step 5): per done question, a table of fact | source
+     (`path:line`, query + environment + time range, URL with the passage
+     quoted) | bears on; flows as ordered steps (`a.go:12 → b.go:40 →
+     ...`); and searched, not found | where (paths, queries, URLs). Facts,
+     not file dumps or long excerpts, but nothing left out for length;
+   - **the reply is short**: a summary of at most ~40 lines, each point
+     tagged with its done question, the "not found / unsure" headlines,
+     and the findings file path.
 
-   Locate first, then analyze. If the first pass only finds where things
-   are, send a second round at the most relevant spots. Do not do that deep
-   reading in this context. This context is for synthesis.
+   The details stay in the files, not in this context: what a summary
+   left out is still on disk for the evidence. Locate first, then
+   analyze. If the first pass only finds where things are, send a second
+   round at the most relevant spots, each with a findings file of its
+   own. Do not do that deep reading in this context. This context is for
+   synthesis.
 
 4. **Synthesize, verify, and finish the evidence.** Wait for every
-   sub-agent. Merge the findings and connect them across areas.
+   sub-agent. Build the evidence from the findings files, not from the
+   summaries: merge their rows under each done question, and write
+   nothing into it that no file or check of yours backs. Use the
+   summaries to connect the areas.
    Spot-check the claims a question for the plan rests on by opening the
    cited lines, re-running the query, or reading the cited passage
    yourself. A wrong source is worse than none. Mark what you did not
    confirm, and drop what you found to be wrong. Strip any recommendation
    a sub-agent slipped in. Where it pointed at a real trade-off, turn it
-   into a question for the plan. Write it all to the evidence file
-   (format below): every fact that serves the purpose, so no later
+   into a question for the plan. Every fact from the files that serves the
+   purpose goes into the evidence file (format below), so no later
    session has to search for it again. The evidence is final before the
    review is started.
 
