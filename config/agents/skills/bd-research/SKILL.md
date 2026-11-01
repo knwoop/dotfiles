@@ -60,9 +60,9 @@ document in the scratchpad, and say that nothing was stored.
    date and the commit and versions it looked at; give every number the
    environment, time range, and query it came from. Keep what was searched
    without finding, and where, so nobody searches for it again: not found
-   there is not the same as does not exist. Bring over
-   everything from the findings files that serves the purpose: they are
-   gone after the session. Check the facts a decision rests on yourself.
+   there is not the same as does not exist. Bring over everything from the
+   findings files that serves the purpose: they are gone after the
+   session. Check the facts a decision rests on yourself.
    End with what is uncertain and what could block the goal: known
    blockers, and unknowns that might turn out to be blockers, as facts,
    without judging whether to go ahead.
