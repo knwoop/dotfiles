@@ -1,6 +1,6 @@
 ---
 name: bd-research
-description: Research a beads (bd) epic before planning it — the "research" step of research → plan → implement. Runs inside a bd-dev plan worktree: agrees on the purpose and scenario with the user first, then fans out read-only sub-agents over the code, production data, vendor docs, and past PRs so the search traffic stays out of this context, and compacts their findings into one research document that states facts with sources and leaves every decision to the plan — no recommendations, no fixes. Once the user accepts it, it is stored on the epic (notes, or a path the user names) so create-plan / bd-plan build on it. Trigger on "/bd-research", "research this first", or when the user asks to investigate a bd issue before planning it.
+description: Research a beads (bd) epic before planning it — the "research" step of research → plan → implement. Runs inside a bd-dev plan worktree, agrees on the purpose and scenario with the user first, then fans out read-only sub-agents over the code, production data, vendor docs, and past PRs so the search traffic stays out of this context, and compacts their findings into one research document that states facts with sources and leaves every decision to the plan — no recommendations, no fixes. Once the user accepts it, it is stored on the epic (notes, or a path the user names) so create-plan / bd-plan build on it. Trigger on "/bd-research", "research this first", or when the user asks to investigate a bd issue before planning it.
 ---
 
 # bd-research
