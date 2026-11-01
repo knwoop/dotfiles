@@ -39,14 +39,19 @@ document in the scratchpad, and say that nothing was stored.
 
 1. **Agree on the purpose.** Read the issue (`bd show <id> --json`, including
    `notes`, which may hold an earlier research) and anything the user points
-   to. Draft the purpose (what this research feeds), the scenario (what is
-   already fixed), the questions that must be answered before planning, and
-   what is out of scope. Confirm it with the user before searching anything.
+   to. Look around briefly first (today's date, the current versions and
+   state of what is involved), so neither the purpose nor the sub-agents'
+   briefs rest on stale assumptions. Then draft the purpose (what this
+   research feeds), the scenario (what is already fixed), the questions
+   that must be answered before planning, and what is out of scope, and
+   confirm it with the user before sending any sub-agent.
 
 2. **Research in sub-agents**, in parallel, one per area. Each writes
    everything it found to its own file, `<scratchpad>/research/<area>.md`,
    with sources and what it searched without finding, and replies with a
-   short summary and the file path.
+   short summary and the file path. Stop when the agreed questions are
+   answered or known to be unanswerable; go back for more at most a couple
+   of times.
 
 3. **Write the document**, `<scratchpad>/research.md`, from those files,
    in whatever form you like. Start it with what was agreed in step 1, so a
