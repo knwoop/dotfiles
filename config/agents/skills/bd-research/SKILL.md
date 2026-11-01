@@ -49,18 +49,14 @@ document in the scratchpad, and say that nothing was stored.
    short summary and the file path.
 
 3. **Write the document**, `<scratchpad>/research.md`, from those files,
-   in whatever form carries the facts best. It needs:
-   - the purpose, scenario, questions, and scope agreed in step 1;
-   - the facts, each with its source, and whether you checked it yourself;
-   - what was searched and not found;
-   - the questions for the plan, with the facts for and against each option;
-   - what could not be determined, and who could answer it.
+   in whatever form you like. Start it with what was agreed in step 1, so a
+   later reader knows what the facts were gathered for, and keep what was
+   searched without finding, so nobody searches for it again. Bring over
+   everything from the findings files that serves the purpose: they are
+   gone after the session. Check the facts a decision rests on yourself.
 
-   Bring over everything from the findings files that serves the purpose:
-   they are gone after the session. Check the facts a decision rests on
-   yourself.
-
-4. **Review with the user.** Give the path and the questions for the plan.
+4. **Review with the user.** Give the path and what is left for the plan to
+   decide.
    Accept → store it. Steer → research again with the correction. Discard
    → stop. Never store research the user has not accepted.
 
@@ -74,7 +70,7 @@ document in the scratchpad, and say that nothing was stored.
    ```
 
    Then point to the next step: create-plan (clear-plan-skills:create-plan)
-   reads it from the issue and starts from the questions for the plan; then
+   reads it from the issue; then
    `/bd-plan`.
 
 ## Notes
