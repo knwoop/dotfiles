@@ -60,9 +60,11 @@ document in the scratchpad, and say that nothing was stored.
    date and the commit and versions it looked at; give every number the
    environment, time range, and query it came from. Keep what was searched
    without finding, and where, so nobody searches for it again: not found
-   there is not the same as does not exist. Bring over everything from the
-   findings files that serves the purpose: they are gone after the
-   session. Have the facts a decision rests on checked by a separate,
+   there is not the same as does not exist. The document is the synthesis;
+   the findings files are kept as they are, appended after it in the same
+   file under a heading of their own, so no detail is lost and nothing is copied over
+   by hand. Where the synthesis and a findings file disagree, the findings
+   file (with its source) is right. Have the facts a decision rests on checked by a separate,
    fresh sub-agent that opens each cited source and reports whether it
    says what the document claims; mark each fact checked or sub-agent
    only, and fix or drop what did not hold.
